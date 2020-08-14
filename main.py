@@ -98,7 +98,7 @@ def inbox_reply_stream(mp_lock, reddit, request_headers, iteration=1):
 						if message_fail_reason is None and riot_region not in ['la', 'la1', 'la2']:
 							# request the summoner from riot
 							summoner_request = requests.get(f"""https://{riot_region}.api.riotgames.com/tft/summoner/v1/summoners/by-name/{riot_summoner_name}""", headers=request_headers)
-							summoner_request.json()
+							summoner_request = summoner_request.json()
 							print(summoner_request['status']['status_code'])
 
 	except prawcore.exceptions.ServerError as error:
