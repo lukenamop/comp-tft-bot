@@ -158,8 +158,25 @@ def inbox_reply_stream(mp_lock, reddit, request_headers, iteration=1):
 							+ '\n3. On the left-hand side, scroll all the way down to the **Verification** tab'
 							+ f'\n4. Enter your unique verification key (`{riot_verification_key}`)'
 							+ '\n5. Click **Save**'
-							+ f'\n6. Click this link to complete your verification: ')
-						# TODO: add shortlink
+							+ f'\n6. [Click here and then click "send" to complete your verification!]({config.FINISH_VERIF_MSG_LINK})')
+
+				# attempt to complete a user's verification
+				if message.subject == 'r/CompetitiveTFT Ranked Flair Verification - Part 2':
+					# search for the redditor in the database
+					fail_message = None
+					query = 'SELECT db_id, riot_region, riot_summoner_name, riot_summoner_id, riot_verification_key FROM flaired_redditors WHERE reddit_username = %s'
+					q_args = [message.author.name]
+					execute_sql(query, q_args)
+					result = connect.db_crsr.fetchone()
+					if result is None:
+						fail_message = message.reply(f"""It looks like you haven't completed the first step of verification.\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
+
+					if fail_message is None:
+						db_id, riot_region, riot_summoner_name, riot_summoner_id, riot_verification_key = result
+						# request the summoner's third party code from riot
+						third_party_code_request = requests.get(f"""https://{riot_region}.api.riotgames.com/lol/platform/v4/third-party-code/by-summoner/{riot_summoner_id}""", headers=request_headers)
+						third_party_code_request = third_party_code_request.text
+						print(third_party_code_request)
 
 	except prawcore.exceptions.ServerError as error:
 		print(f'skipping message due to PRAW error: {type(error)}: {error}')
@@ -174,7 +191,7 @@ def inbox_reply_stream(mp_lock, reddit, request_headers, iteration=1):
 	if iteration <= config.OVERFLOW:
 		inbox_reply_stream(mp_lock, reddit, iteration)
 	else:
-		print(f'killing inbox reply stream, >{config.OVERFLOW} skipped logs')
+		print(f'killing inbox reply stream, >{config.OVERFLOW} skipped messages')
 
 
 ##### CODE TO RUN AT LAUNCH #####
