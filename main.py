@@ -98,22 +98,22 @@ def inbox_reply_stream(mp_lock, reddit, request_headers, iteration=1):
 							try_riot_region = 'la1'
 							# request the summoner from riot
 							summoner_request = requests.get(f"""https://{try_riot_region}.api.riotgames.com/tft/summoner/v1/summoners/by-name/{riot_summoner_name}""", headers=request_headers)
-							summoner_request = summoner_request.json()
+							summoner_json = summoner_request.json()
 							try:
-								riot_summoner_id = summoner_request['id']
+								riot_summoner_id = summoner_json['id']
 								riot_region = try_riot_region
 							except KeyError:
 								try_riot_region = 'la2'
 								# request the summoner from riot
 								summoner_request = requests.get(f"""https://{try_riot_region}.api.riotgames.com/tft/summoner/v1/summoners/by-name/{riot_summoner_name}""", headers=request_headers)
-								summoner_request = summoner_request.json()
+								summoner_json = summoner_request.json()
 								try:
-									riot_summoner_id = summoner_request['id']
+									riot_summoner_id = summoner_json['id']
 									riot_region = try_riot_region
 								except KeyError:
 									try:
-										fail_message = message.reply(f"""There was an error fetching your summoner profile: `{summoner_request['status']['message']}`\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
-										print(f"""{summoner_request['status']['status_code']} error fetching summoner: u/{message.author.name} -- {riot_summoner_name} -- {riot_region}: {summoner_request['status']['message']}""")
+										fail_message = message.reply(f"""There was an error fetching your summoner profile: `{summoner_json['status']['message']}`\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
+										print(f"""{summoner_json['status']['status_code']} error fetching summoner: u/{message.author.name} -- {riot_summoner_name} -- {riot_region}: {summoner_json['status']['message']}""")
 									except KeyError:
 										fail_message = message.reply(f"""There was an unknown error fetching your summoner profile. If this issue continues, please contact u/lukenamop.\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
 										print(f'unknown error fetching summoner: u/{message.author.name} -- {riot_summoner_name} -- {riot_region}')
@@ -122,13 +122,13 @@ def inbox_reply_stream(mp_lock, reddit, request_headers, iteration=1):
 						if fail_message is None and riot_region not in ['la', 'la1', 'la2']:
 							# request the summoner from riot
 							summoner_request = requests.get(f"""https://{riot_region}.api.riotgames.com/tft/summoner/v1/summoners/by-name/{riot_summoner_name}""", headers=request_headers)
-							summoner_request = summoner_request.json()
+							summoner_json = summoner_request.json()
 							try:
-								riot_summoner_id = summoner_request['id']
+								riot_summoner_id = summoner_json['id']
 							except KeyError:
 								try:
-									fail_message = message.reply(f"""There was an error fetching your summoner profile: `{summoner_request['status']['message']}`\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
-									print(f"""{summoner_request['status']['status_code']} error fetching summoner: u/{message.author.name} -- {riot_summoner_name} -- {riot_region}: {summoner_request['status']['message']}""")
+									fail_message = message.reply(f"""There was an error fetching your summoner profile: `{summoner_json['status']['message']}`\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
+									print(f"""{summoner_json['status']['status_code']} error fetching summoner: u/{message.author.name} -- {riot_summoner_name} -- {riot_region}: {summoner_json['status']['message']}""")
 								except KeyError:
 									fail_message = message.reply(f"""There was an unknown error fetching your summoner profile. If this issue continues, please contact u/lukenamop.\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
 									print(f'unknown error fetching summoner: u/{message.author.name} -- {riot_summoner_name} -- {riot_region}')
@@ -175,8 +175,15 @@ def inbox_reply_stream(mp_lock, reddit, request_headers, iteration=1):
 						db_id, riot_region, riot_summoner_name, riot_summoner_id, riot_verification_key = result
 						# request the summoner's third party code from riot
 						third_party_code_request = requests.get(f"""https://{riot_region}.api.riotgames.com/lol/platform/v4/third-party-code/by-summoner/{riot_summoner_id}""", headers=request_headers)
-						third_party_code_request = third_party_code_request.text.strip('"')
-						print(third_party_code_request)
+						third_party_code = third_party_code_request.text.strip('"')
+
+						# check the summoner's third party code against their verification key in the database
+						if third_party_code != riot_verification_key:
+							fail_message = message.reply(f"""Your verification key was incorrect.\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
+
+					if fail_message is None:
+						# update the redditor's flair in the subreddit
+						reddit.subreddit
 
 	except prawcore.exceptions.ServerError as error:
 		print(f'skipping message due to PRAW error: {type(error)}: {error}')

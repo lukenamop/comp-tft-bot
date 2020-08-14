@@ -18,6 +18,9 @@ def db_connect(connection_name):
 	return True
 
 def db_stats():
+	db_crsr.execute("""ALTER TABLE flaired_redditors ADD COLUMN custom_flair VARCHAR(60) DEFAULT NULL""")
+	db_conn.commit()
+
 	db_crsr.execute("""SELECT COUNT(*) FROM flaired_redditors WHERE riot_verified = False""")
 	unverified_redditors = db_crsr.fetchone()[0]
 
@@ -38,3 +41,4 @@ def db_stats():
 # riot_verification_key VARCHAR(6) NOT NULL
 # riot_verified BOOLEAN DEFAULT False
 # riot_verified_rank VARCHAR(40) DEFAULT NULL
+# custom_flair VARCHAR(60) DEFAULT NULL
