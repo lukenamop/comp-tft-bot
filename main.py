@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 
 # import libraries
+import math
 import praw
 import prawcore
-import math
 import random
 import time
 from multiprocessing import Process, Lock
+from riotwatcher import LolWatcher, ApiError
 
 # import additional files
 import config
@@ -34,6 +35,8 @@ def inbox_reply_stream(mp_lock, reddit, iteration=1):
 
 	subreddit = reddit.subreddit(config.HOME_SUBREDDIT)
 	try:
+		messages = reddit.inbox.messages
+		# iterate through all mentions, indefinitely
 		for message in praw.models.util.stream_generator(messages, skip_existing=True):
 			print(vars(message))
 
