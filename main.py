@@ -34,7 +34,7 @@ def inbox_reply_stream(mp_lock, reddit, iteration=1):
 
 	subreddit = reddit.subreddit(config.HOME_SUBREDDIT)
 	try:
-		for message in praw.util.stream_generator(messages, skip_existing=True):
+		for message in praw.models.util.stream_generator(messages, skip_existing=True):
 			print(vars(message))
 
 	except prawcore.exceptions.ServerError as error:
