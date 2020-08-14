@@ -8,7 +8,6 @@ import random
 import requests
 import time
 from multiprocessing import Process, Lock
-from riotwatcher import LolWatcher, ApiError
 from unidecode import unidecode
 
 # import additional files

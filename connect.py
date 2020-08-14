@@ -18,6 +18,7 @@ def db_connect(connection_name):
 	return True
 
 def db_stats():
+	db_crsr.execute("""DROP TABLE flaired_redditors""")
 	db_crsr.execute("""CREATE TABLE flaired_redditors (
 		db_id SERIAL PRIMARY KEY,
 		reddit_username VARCHAR(30) NOT NULL,

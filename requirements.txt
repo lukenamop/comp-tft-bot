@@ -1,5 +1,4 @@
 praw
 prawcore
 psycopg2
-riotwatcher
 git+https://github.com/takluyver/Unidecode.git
