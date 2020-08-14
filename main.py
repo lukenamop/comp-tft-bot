@@ -106,7 +106,7 @@ def inbox_reply_stream(mp_lock, reddit, request_headers, iteration=1):
 							except KeyError:
 								try:
 									fail_message = message.reply(f"""There was an error fetching your summoner profile: `{summoner_request['status']['message']}`\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
-									print(f'error fetching summoner {riot_summoner_name} in region {riot_region}: {summoner_request['status']['status_code']} - {summoner_request['status']['message']}')
+									print(f"""error fetching summoner {riot_summoner_name} in region {riot_region}: {summoner_request['status']['status_code']} - {summoner_request['status']['message']}""")
 								except KeyError:
 									fail_message = message.reply(f"""There was an unknown error fetching your summoner profile. If this issue continues, please contact u/lukenamop.\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
 
