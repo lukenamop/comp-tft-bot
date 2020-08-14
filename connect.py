@@ -31,10 +31,10 @@ def db_stats():
 	db_conn.commit()
 
 	db_crsr.execute("""SELECT COUNT(*) FROM flaired_redditors WHERE riot_verified = False""")
-	unverified_redditors = crsr.fetchone()[0]
+	unverified_redditors = db_crsr.fetchone()[0]
 
 	db_crsr.execute("""SELECT COUNT(*) FROM flaired_redditors WHERE riot_verified = True""")
-	verified_redditors = crsr.fetchone()[0]
+	verified_redditors = db_crsr.fetchone()[0]
 
 	# print connection properties
 	print(f'postgres connection info: {db_conn.get_dsn_parameters()}'
