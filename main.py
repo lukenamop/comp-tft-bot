@@ -48,7 +48,7 @@ def inbox_reply_stream(mp_lock, reddit, iteration=1):
 
 	iteration += 1
 	if iteration <= config.OVERFLOW:
-		flair_mod_stream(mp_lock, reddit, iteration)
+		inbox_reply_stream(mp_lock, reddit, iteration)
 	else:
 		print(f'killing inbox reply stream, >{config.OVERFLOW} skipped logs')
 
