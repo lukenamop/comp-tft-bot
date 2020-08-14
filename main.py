@@ -59,10 +59,9 @@ def inbox_reply_stream(mp_lock, reddit, request_headers, iteration=1):
 					try:
 						riot_summoner_name = unidecode(message.body.split('%')[1].split('%')[0])
 						riot_region = unidecode(message.body.split('%')[3].split('%')[0]).lower()
-						print(f'rsn: {riot_summoner_name}\nrr: {riot_region}')
 					except IndexError:
-						print(f'message from u/{message.author.name} did not follow verification template')
 						fail_message = message.reply(f"""It doesn't look like you followed the message template.\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
+						print(f'did not follow verification template: u/{message.author.name}')
 
 					if fail_message is None:
 						# make sure the provided region matches one of the options
@@ -88,27 +87,78 @@ def inbox_reply_stream(mp_lock, reddit, request_headers, iteration=1):
 							riot_region = 'tr1'
 						else:
 							fail_message = message.reply(f"""The region you provided, `{riot_region.upper()}`, was not valid.\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
+							print(f'invalid region: u/{message.author.name} -- {riot_summoner_name} -- {riot_region}')
 						
 					if fail_message is None:
 						riot_summoner_id = None
+
+						# first check both 'la' regions
 						if riot_region == 'la':
-							riot_summoner_id_1 = None
-							riot_summoner_id_2 = None
-							pass
+							try_riot_region = 'la1'
+							# request the summoner from riot
+							summoner_request = requests.get(f"""https://{try_riot_region}.api.riotgames.com/tft/summoner/v1/summoners/by-name/{riot_summoner_name}""", headers=request_headers)
+							summoner_request = summoner_request.json()
+							try:
+								riot_summoner_id = summoner_request['id']
+								riot_region = try_riot_region
+							except KeyError:
+								try_riot_region = 'la2'
+								# request the summoner from riot
+								summoner_request = requests.get(f"""https://{try_riot_region}.api.riotgames.com/tft/summoner/v1/summoners/by-name/{riot_summoner_name}""", headers=request_headers)
+								summoner_request = summoner_request.json()
+								try:
+									riot_summoner_id = summoner_request['id']
+									riot_region = try_riot_region
+								except KeyError:
+									try:
+										fail_message = message.reply(f"""There was an error fetching your summoner profile: `{summoner_request['status']['message']}`\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
+										print(f"""{summoner_request['status']['status_code']} error fetching summoner: u/{message.author.name} -- {riot_summoner_name} -- {riot_region}: {summoner_request['status']['message']}""")
+									except KeyError:
+										fail_message = message.reply(f"""There was an unknown error fetching your summoner profile. If this issue continues, please contact u/lukenamop.\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
+										print(f'unknown error fetching summoner: u/{message.author.name} -- {riot_summoner_name} -- {riot_region}')
 						
+						# then check all other regions
 						if fail_message is None and riot_region not in ['la', 'la1', 'la2']:
 							# request the summoner from riot
 							summoner_request = requests.get(f"""https://{riot_region}.api.riotgames.com/tft/summoner/v1/summoners/by-name/{riot_summoner_name}""", headers=request_headers)
 							summoner_request = summoner_request.json()
 							try:
 								riot_summoner_id = summoner_request['id']
-								print(f'summoner ID: {riot_summoner_id}')
 							except KeyError:
 								try:
 									fail_message = message.reply(f"""There was an error fetching your summoner profile: `{summoner_request['status']['message']}`\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
-									print(f"""error fetching summoner {riot_summoner_name} in region {riot_region}: {summoner_request['status']['status_code']} - {summoner_request['status']['message']}""")
+									print(f"""{summoner_request['status']['status_code']} error fetching summoner: u/{message.author.name} -- {riot_summoner_name} -- {riot_region}: {summoner_request['status']['message']}""")
 								except KeyError:
 									fail_message = message.reply(f"""There was an unknown error fetching your summoner profile. If this issue continues, please contact u/lukenamop.\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
+									print(f'unknown error fetching summoner: u/{message.author.name} -- {riot_summoner_name} -- {riot_region}')
+
+					if fail_message is None:
+						# generate random 6 character string excluding unwanted_chars
+						unwanted_chars = ["0", "O", "l", "I"]
+						char_choices = [char for char in string.ascii_letters if char not in unwanted_chars] + [char for char in string.digits if char not in unwanted_chars]
+						riot_verification_key = ''.join(random.choices(char_choices, k=6))
+
+						# only allow one database entry per redditor
+						query = 'DELETE FROM flaired_redditors WHERE reddit_username = %s'
+						q_args = [message.author.name]
+						execute_sql(query, q_args)
+						connect.db_conn.commit()
+
+						# add the redditor to the database
+						query = 'INSERT INTO flaired_redditors (reddit_username, riot_region, riot_summoner_name, riot_summoner_id, riot_verification_key) VALUES (%s, %s, %s, %s, %s)'
+						q_args = [message.author.name, riot_region, riot_summoner_name, riot_summoner_id, riot_verification_key]
+						execute_sql(query, q_args)
+						connect.db_conn.commit()
+
+						# send the redditor instructions to complete verification
+						message.reply(f'Your unique verification key is `{riot_verification_key}`. To complete verification, follow these steps:'
+							+ '\n\n1. Open the **League of Legends** launcher'
+							+ '\n2. Click the **Settings** cog in the top right'
+							+ '\n3. On the left-hand side, scroll all the way down to the **Verification** tab'
+							+ f'\n4. Enter your unique verification key (`{riot_verification_key}`)'
+							+ '\n5. Click **Save**'
+							+ f'\n6. Click this link to complete your verification: ')
+						# TODO: add shortlink
 
 	except prawcore.exceptions.ServerError as error:
 		print(f'skipping message due to PRAW error: {type(error)}: {error}')
