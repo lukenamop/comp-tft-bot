@@ -34,7 +34,7 @@ def db_stats():
 # reddit_username VARCHAR(30) NOT NULL
 # riot_region VARCHAR(6) NOT NULL
 # riot_summoner_name VARCHAR(30) NOT NULL
-# riot_summoner_id VARCHAR(100) NOT NULL
+# riot_summoner_id VARCHAR(100) DEFAULT NULL
 # riot_verification_key VARCHAR(6) NOT NULL
 # riot_verified BOOLEAN DEFAULT False
 # riot_verified_rank VARCHAR(40) DEFAULT NULL

@@ -6,6 +6,7 @@ import praw
 import prawcore
 import random
 import requests
+import string
 import time
 from multiprocessing import Process, Lock
 from unidecode import unidecode
