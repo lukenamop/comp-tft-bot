@@ -5,9 +5,11 @@ import math
 import praw
 import prawcore
 import random
+import requests
 import time
 from multiprocessing import Process, Lock
 from riotwatcher import LolWatcher, ApiError
+from unidecode import unidecode
 
 # import additional files
 import config
@@ -38,7 +40,22 @@ def inbox_reply_stream(mp_lock, reddit, iteration=1):
 		messages = reddit.inbox.messages
 		# iterate through all mentions, indefinitely
 		for message in praw.models.util.stream_generator(messages, skip_existing=True):
-			print(vars(message))
+			# make sure the message is actually new
+			respond_to_message = True
+			if message.created_utc < (time.time() - 60 * 30):
+				respond_to_message = False
+
+			if respond_to_message:
+				# mark any new message as read
+				reddit.inbox.mark_read([message])
+
+				# start the verification process for a new user
+				if message.subject == 'r/CompetitiveTFT Ranked Flair Verification':
+					# generate random 6 character string excluding unwanted_chars
+					unwanted_chars = ["0", "O", "l", "I"]
+					char_choices = [char for char in string.ascii_letters if char not in unwanted_chars] + [char for char in string.digits if char not in unwanted_chars]
+					verification_string = ''.join(random.choices(char_choices, k=6))
+					pass
 
 	except prawcore.exceptions.ServerError as error:
 		print(f'skipping message due to PRAW error: {type(error)}: {error}')
