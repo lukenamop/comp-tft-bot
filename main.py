@@ -55,16 +55,16 @@ def inbox_reply_stream(mp_lock, reddit, request_headers, iteration=1):
 				# start the verification process for a new user
 				if message.subject == 'r/CompetitiveTFT Ranked Flair Verification':
 					# check to see if the message template was followed
-					message_fail_reason = None
+					fail_message = None
 					try:
 						riot_summoner_name = unidecode(message.body.split('%')[1].split('%')[0])
 						riot_region = unidecode(message.body.split('%')[3].split('%')[0]).lower()
 						print(f'rsn: {riot_summoner_name}\nrr: {riot_region}')
 					except IndexError:
 						print(f'message from u/{message.author.name} did not follow verification template')
-						message_fail_reason = f"""It doesn't look like you followed the message template. If you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK})."""
+						fail_message = message.reply(f"""It doesn't look like you followed the message template.\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
 
-					if message_fail_reason is None:
+					if fail_message is None:
 						# make sure the provided region matches one of the options
 						if riot_region in ['br', 'br1']:
 							riot_region = 'br1'
@@ -87,19 +87,28 @@ def inbox_reply_stream(mp_lock, reddit, request_headers, iteration=1):
 						elif riot_region in ['tr', 'tr1']:
 							riot_region = 'tr1'
 						else:
-							message_fail_reason = f"""The region you provided, `{riot_region.upper()}`, was not valid. If you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK})."""
+							fail_message = message.reply(f"""The region you provided, `{riot_region.upper()}`, was not valid.\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
 						
-					if message_fail_reason is None:
+					if fail_message is None:
+						riot_summoner_id = None
 						if riot_region == 'la':
 							riot_summoner_id_1 = None
 							riot_summoner_id_2 = None
 							pass
 						
-						if message_fail_reason is None and riot_region not in ['la', 'la1', 'la2']:
+						if fail_message is None and riot_region not in ['la', 'la1', 'la2']:
 							# request the summoner from riot
 							summoner_request = requests.get(f"""https://{riot_region}.api.riotgames.com/tft/summoner/v1/summoners/by-name/{riot_summoner_name}""", headers=request_headers)
 							summoner_request = summoner_request.json()
-							print(summoner_request['status']['status_code'])
+							try:
+								riot_summoner_id = summoner_request['id']
+								print(f'summoner ID: {riot_summoner_id}')
+							except KeyError:
+								try:
+									fail_message = message.reply(f"""There was an error fetching your summoner profile: `{summoner_request['status']['message']}`\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
+									print(f'error fetching summoner {riot_summoner_name} in region {riot_region}: {summoner_request['status']['status_code']} - {summoner_request['status']['message']}')
+								except KeyError:
+									fail_message = message.reply(f"""There was an unknown error fetching your summoner profile. If this issue continues, please contact u/lukenamop.\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
 
 	except prawcore.exceptions.ServerError as error:
 		print(f'skipping message due to PRAW error: {type(error)}: {error}')
