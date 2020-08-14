@@ -175,7 +175,7 @@ def inbox_reply_stream(mp_lock, reddit, request_headers, iteration=1):
 						db_id, riot_region, riot_summoner_name, riot_summoner_id, riot_verification_key = result
 						# request the summoner's third party code from riot
 						third_party_code_request = requests.get(f"""https://{riot_region}.api.riotgames.com/lol/platform/v4/third-party-code/by-summoner/{riot_summoner_id}""", headers=request_headers)
-						third_party_code_request = third_party_code_request.text
+						third_party_code_request = third_party_code_request.text.strip('"')
 						print(third_party_code_request)
 
 	except prawcore.exceptions.ServerError as error:
