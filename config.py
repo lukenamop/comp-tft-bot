@@ -18,3 +18,6 @@ R_USER_AGENT = 'heroku:comp-tft-bot (by /u/lukenamop)'
 HOME_SUBREDDIT = 'CompetitiveTFTTestSub'
 # flair_mod_stream error overflow limit
 OVERFLOW = 5
+
+# riot API token
+RIOT_API_TOKEN = os.environ['RIOT_API_TOKEN']
