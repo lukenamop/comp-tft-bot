@@ -199,12 +199,12 @@ def inbox_reply_stream(mp_lock, reddit, request_headers, iteration=1):
 						if third_party_code != riot_verification_key:
 							fail_message = message.reply(f"""Your verification key was incorrect.\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
 
+						# if fail_message is None:
 						# request the summoner's ranked info from riot
-						ranked_request = requests.get(f"""https://{riot_region}.api.riotgames.com/tft/league/v1/entries/by-summoner/{riot_summoner_id}""")
+						ranked_request = requests.get(f"""https://{riot_region}.api.riotgames.com/tft/league/v1/entries/by-summoner/{riot_summoner_id}""", headers=request_headers)
 						ranked_json = ranked_request.json()
 						print(ranked_json)
 						return
-
 					if fail_message is None:
 						flair_suffix = ''
 						if custom_flair is not None:
