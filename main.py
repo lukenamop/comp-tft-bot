@@ -322,7 +322,7 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 					print(f'auto-updater unknown error fetching summoner: u/{reddit_username} -- {riot_summoner_name} -- {riot_region}')
 					fail_message = ''
 			except IndexError:
-				print(f'auto-updater skipped u/{reddit_username}, Unranked')
+				# print(f'auto-updater skipped u/{reddit_username}, Unranked')
 				fail_message = ''
 				# TODO: check lockout
 				# update the redditor in the database
@@ -369,7 +369,7 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 					current_redditor_flair = flair['flair_text']
 
 				if new_riot_verified_rank == 'Unranked':
-					print(f'auto-updater skipped u/{reddit_username}, Unranked')
+					# print(f'auto-updater skipped u/{reddit_username}, Unranked')
 				else:
 					# TODO: check lockout
 					# if it has changed, update the redditor's flair in the subreddit
@@ -377,7 +377,8 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 						subreddit.flair.set(reddit_username, text=f':{new_riot_verified_rank_tier.lower()[:4]}: {new_riot_verified_rank}{flair_suffix}', flair_template_id=flair_template_id)
 						print(f'auto-updater triggered for u/{reddit_username}: {new_riot_verified_rank}{flair_suffix}')
 					else:
-						print(f'auto-updater skipped u/{reddit_username}, no change in flair')
+						# print(f'auto-updater skipped u/{reddit_username}, no change in flair')
+						pass
 
 				# update the redditor in the database
 				query = 'UPDATE flaired_redditors SET riot_verified_rank = %s, custom_flair = %s WHERE reddit_username = %s'
