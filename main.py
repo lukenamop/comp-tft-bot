@@ -294,7 +294,6 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 
 	# connect to the database
 	connect.db_connect('ranked flair update')
-	connect.db_stats()
 
 	subreddit = reddit.subreddit(config.HOME_SUBREDDIT)
 	try:
@@ -365,7 +364,7 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 					print(f'auto-updater skipped u/{reddit_username}, Unranked')
 				else:
 					# if it has changed, update the redditor's flair in the subreddit
-					if current_redditor_flair != f':{riot_verified_rank_tier.lower()}: {riot_verified_rank}{flair_suffix}':
+					if current_redditor_flair != f':{riot_verified_rank_tier.lower()[:3]}: {riot_verified_rank}{flair_suffix}':
 						subreddit.flair.set(reddit_username, text=f':{riot_verified_rank_tier.lower()}: {riot_verified_rank}{flair_suffix}', flair_template_id=flair_template_id)
 						print(f'auto-updater triggered for u/{reddit_username}: {riot_verified_rank}{flair_suffix}')
 					else:
@@ -381,13 +380,13 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 			time.sleep(config.AUTO_UPDATE_SLEEP_TIME)
 
 	except prawcore.exceptions.ServerError as error:
-		print(f'skipping flair update due to PRAW error: {type(error)}: {error}')
+		print(f'skipping auto-update due to PRAW error: {type(error)}: {error}')
 	except prawcore.exceptions.RequestException as error:
-		print(f'skipping flair update due to PRAW error: {type(error)}: {error}')
+		print(f'skipping auto-update due to PRAW error: {type(error)}: {error}')
 	except prawcore.exceptions.ResponseException as error:
-		print(f'skipping flair update due to PRAW error: {type(error)}: {error}')
+		print(f'skipping auto-update due to PRAW error: {type(error)}: {error}')
 	except Exception as error:
-		print(f'skipping flair update due to unknown error: {type(error)}: {error}')
+		print(f'skipping auto-update due to unknown error: {type(error)}: {error}')
 
 	iteration += 1
 	if iteration <= config.OVERFLOW:
