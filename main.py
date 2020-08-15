@@ -321,7 +321,7 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 					print(f'auto-updater unknown error fetching summoner: u/{reddit_username} -- {riot_summoner_name} -- {riot_region}')
 					fail_message = ''
 			except IndexError:
-				print(f'auto-updater skipped u/{reddit_username}, no change in flair')
+				print(f'auto-updater skipped u/{reddit_username}, Unranked')
 				fail_message = ''
 
 				# update the redditor in the database
