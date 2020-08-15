@@ -216,9 +216,6 @@ def inbox_reply_stream(mp_lock, reddit, request_headers, iteration=1):
 								fail_message = message.reply(f"""There was an unknown error fetching your ranked info. If this issue continues, please contact u/lukenamop.\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
 								print(f'unknown error fetching summoner: u/{message.author.name} -- {riot_summoner_name} -- {riot_region}')
 						except IndexError:
-							# clear the redditor's flair in the subreddit
-							subreddit.flair.delete(message.author.name)
-
 							# send the redditor a message
 							fail_message = message.reply(f"""Your verified summoner account `{riot_summoner_name}` is currently `{riot_verified_rank}`. Your flair on r/{config.HOME_SUBREDDIT} has not been updated, please get ranked to update your flair!\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
 
@@ -254,9 +251,6 @@ def inbox_reply_stream(mp_lock, reddit, request_headers, iteration=1):
 							flair_suffix = f' | {custom_flair}'
 
 						if riot_verified_rank == 'Unranked':
-							# clear the redditor's flair in the subreddit
-							subreddit.flair.delete(message.author.name)
-
 							# send the redditor a message
 							message.reply(f"""Your verified summoner account `{riot_summoner_name}` is currently `{riot_verified_rank}`. Your flair on r/{config.HOME_SUBREDDIT} has not been updated, please get ranked to update your flair!\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
 						else:
