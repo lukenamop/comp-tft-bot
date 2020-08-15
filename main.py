@@ -177,6 +177,7 @@ def inbox_reply_stream(mp_lock, reddit, request_headers, iteration=1):
 							+ f'\n4. Enter your unique verification key (`{riot_verification_key}`)'
 							+ '\n5. Click **Save**'
 							+ f'\n6. [Click here and then click "send" to complete your verification!]({config.FINISH_VERIF_MSG_LINK})')
+						print(f"""verification key sent to u/{message.author.name}""")
 
 				# attempt to complete a user's verification
 				if message.subject == 'r/CompetitiveTFT Ranked Flair Verification - Part 2':
