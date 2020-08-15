@@ -63,7 +63,7 @@ def inbox_reply_stream(mp_lock, reddit, request_headers, iteration=1):
 							fail_message = message.reply(f"""There was an error fetching your summoner profile.\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
 						riot_region = unidecode(message.body.split('%')[3].split('%')[0]).lower().strip()
 						custom_flair = unidecode(message.body.split('%')[5].split('%')[0]).strip()
-						if len(custom_flair) > config.CUSTOM_FLAIR_LEN_LIM:
+						if len(custom_flair) > config.CUSTOM_FLAIR_CHAR_LIM:
 							fail_message = message.reply(f"""Your custom flair `{custom_flair}` was too long, it cannot be longer than 30 characters.\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
 					except IndexError:
 						fail_message = message.reply(f"""It doesn't look like you followed the message template.\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
@@ -288,6 +288,112 @@ def inbox_reply_stream(mp_lock, reddit, request_headers, iteration=1):
 		inbox_reply_stream(mp_lock, reddit, iteration)
 	else:
 		print(f'killing inbox reply stream, >{config.OVERFLOW} skipped messages')
+
+def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
+	print('ranked_flair_updater started')
+
+	# connect to the database
+	connect.db_connect('ranked flair update')
+	connect.db_stats()
+
+	subreddit = reddit.subreddit(config.HOME_SUBREDDIT)
+	try:
+		# fetch all redditors from the database
+		query = 'SELECT reddit_username, riot_region, riot_summoner_id, custom_flair FROM flaired_redditors WHERE riot_verified = True'
+		execute_sql(query)
+		results = connect.db_crsr.fetchall()
+		# iterate through all redditors
+		for redditor in results:
+			fail_message = None
+			reddit_username, riot_region, riot_summoner_id, custom_flair = redditor
+			# request the summoner's ranked info from riot
+			ranked_request = requests.get(f"""https://{riot_region}.api.riotgames.com/tft/league/v1/entries/by-summoner/{riot_summoner_id}""", headers=request_headers)
+			ranked_json = ranked_request.json()
+			try:
+				riot_verified_rank_tier = ranked_json[0]['tier']
+				riot_verified_rank_division = ranked_json[0]['rank']
+				riot_verified_rank = f'{riot_verified_rank_tier[0].upper()}{riot_verified_rank_tier[1:].lower()} {riot_verified_rank_division}'
+			except KeyError:
+				try:
+					print(f"""auto-updater {ranked_json['status']['status_code']} error fetching ranked info: u/{reddit_username} -- {riot_summoner_name} -- {riot_region}: {ranked_json['status']['message']}""")
+				except KeyError:
+					print(f'auto-updater unknown error fetching summoner: u/{reddit_username} -- {riot_summoner_name} -- {riot_region}')
+			except IndexError:
+				print(f'auto-updater skipped u/{reddit_username}, no change in flair')
+
+				# update the redditor in the database
+				query = 'UPDATE flaired_redditors SET riot_verified_rank = %s, custom_flair = %s WHERE reddit_username = %s'
+				q_args = ['Unranked', custom_flair, reddit_username]
+				execute_sql(query, q_args)
+				connect.db_conn.commit()
+
+			if fail_message is None:
+				# find the flair template ID for the summoner's ranked tier
+				if riot_verified_rank.startswith('Iron'):
+					flair_template_id = '02ffc88c-de8d-11ea-b61c-0e68680acae9'
+				elif riot_verified_rank.startswith('Bronze'):
+					flair_template_id = '0c755e18-de8d-11ea-bbc0-0ec8330c3f45'
+				elif riot_verified_rank.startswith('Silver'):
+					flair_template_id = '0e2281fa-de8d-11ea-b1b5-0e924619d27b'
+				elif riot_verified_rank.startswith('Gold'):
+					flair_template_id = '10e74358-de8d-11ea-958d-0e6b190ecc7b'
+				elif riot_verified_rank.startswith('Platinum'):
+					flair_template_id = '13fd6a4a-de8d-11ea-928c-0e8484cf5443'
+				elif riot_verified_rank.startswith('Diamond'):
+					flair_template_id = '16723b66-de8d-11ea-9ce7-0e3953cf8987'
+				elif riot_verified_rank.startswith('Master'):
+					riot_verified_rank = 'Master'
+					flair_template_id = '48b9e132-de8d-11ea-a71f-0e762dd480fb'
+				elif riot_verified_rank.startswith('Grandmaster'):
+					riot_verified_rank = 'Grandmaster'
+					flair_template_id = '4c638c7a-de8d-11ea-b264-0ef6b978cbfb'
+				elif riot_verified_rank.startswith('Challenger'):
+					riot_verified_rank = 'Challenger'
+					flair_template_id = '4f4a4d5c-de8d-11ea-b610-0efb666e413f'
+				else:
+					riot_verified_rank = 'Unranked'
+
+				flair_prefix = riot_verified_rank
+				flair_suffix = ''
+				if custom_flair is not None:
+					flair_suffix = f' | {custom_flair}'
+
+				# find the redditor's existing flair
+				current_redditor_flair = reddit.subreddit(config.HOME_SUBREDDIT).flair(redditor=reddit_username, limit=1)
+
+				if riot_verified_rank == 'Unranked':
+					print(f'auto-updater skipped u/{reddit_username}, Unranked')
+				else:
+					# if it has changed, update the redditor's flair in the subreddit
+					if current_redditor_flair != f':{riot_verified_rank_tier.lower()}: {riot_verified_rank}{flair_suffix}':
+						subreddit.flair.set(reddit_username, text=f':{riot_verified_rank_tier.lower()}: {riot_verified_rank}{flair_suffix}', flair_template_id=flair_template_id)
+						print(f'auto-updater triggered for u/{reddit_username}: {riot_verified_rank}{flair_suffix}')
+					else:
+						print(f'auto-updater skipped u/{reddit_username}, no change in flair')
+
+				# update the redditor in the database
+				query = 'UPDATE flaired_redditors SET riot_verified_rank = %s, custom_flair = %s WHERE reddit_username = %s'
+				q_args = [riot_verified_rank, custom_flair, reddit_username]
+				execute_sql(query, q_args)
+				connect.db_conn.commit()
+
+			# sleep for a few seconds before updating the next redditor
+			time.sleep(config.AUTO_UPDATE_SLEEP_TIME)
+
+	except prawcore.exceptions.ServerError as error:
+		print(f'skipping flair update due to PRAW error: {type(error)}: {error}')
+	except prawcore.exceptions.RequestException as error:
+		print(f'skipping flair update due to PRAW error: {type(error)}: {error}')
+	except prawcore.exceptions.ResponseException as error:
+		print(f'skipping flair update due to PRAW error: {type(error)}: {error}')
+	except Exception as error:
+		print(f'skipping flair update due to unknown error: {type(error)}: {error}')
+
+	iteration += 1
+	if iteration <= config.OVERFLOW:
+		ranked_flair_updater(mp_lock, reddit, iteration)
+	else:
+		print(f'killing ranked flair updater, >{config.OVERFLOW} skipped messages')
 
 
 ##### CODE TO RUN AT LAUNCH #####
