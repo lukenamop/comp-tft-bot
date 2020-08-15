@@ -10,4 +10,4 @@ The bot has a verification flow to allow redditors on the <a href="https://www.r
 
 The code, as it is was written, is specifically for use on <a href="https://www.reddit.com/r/CompetitiveTFT">r/CompetitiveTFT</a> and would need a handful of changes to be compatible with other subreddits. If you run a subreddit that would benefit from this bot, please reach out to me on Discord at lukenamop#0918 and I would be happy to help you get it set up.
 
-My Riot API ID: <a href="riot.txt">Riot ID</a>
+My Riot API ID: 
