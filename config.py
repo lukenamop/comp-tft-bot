@@ -27,7 +27,7 @@ CUSTOM_FLAIR_CHAR_LIM = 30
 # auto-updater sleep time between flair updates (seconds)
 AUTO_UPDATE_SLEEP_TIME = 15
 # auto-updater flair decay lockout start (epoch timestamp)
-AUTO_UPDATE_LOCKOUT_START = 1597474800
+AUTO_UPDATE_LOCKOUT_START = 1600153200
 # auto-updater flair decay lockout duration (days)
 AUTO_UPDATE_LOCKOUT_DAYS = 30
 # auto-updater flair decay lockout start and end datetime objects
@@ -51,6 +51,18 @@ RANKED_DIV_DICT = {
 	'III': 1,
 	'II': 2,
 	'I': 3
+}
+RANKED_TIER_FLAIR_DICT = {
+	'Unranked': None,
+	'Iron': '02ffc88c-de8d-11ea-b61c-0e68680acae9',
+	'Bronze': '0c755e18-de8d-11ea-bbc0-0ec8330c3f45',
+	'Silver': '0e2281fa-de8d-11ea-b1b5-0e924619d27b',
+	'Gold': '10e74358-de8d-11ea-958d-0e6b190ecc7b',
+	'Platinum': '13fd6a4a-de8d-11ea-928c-0e8484cf5443',
+	'Diamond': '16723b66-de8d-11ea-9ce7-0e3953cf8987',
+	'Master': '48b9e132-de8d-11ea-a71f-0e762dd480fb',
+	'Grandmaster': '4c638c7a-de8d-11ea-b264-0ef6b978cbfb',
+	'Challenger': '4f4a4d5c-de8d-11ea-b610-0efb666e413f'
 }
 
 # verification message links
