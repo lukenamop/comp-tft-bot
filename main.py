@@ -207,8 +207,9 @@ def inbox_reply_stream(mp_lock, reddit, request_headers, iteration=1):
 						ranked_json = ranked_request.json()
 						try:
 							riot_verified_rank_tier = ranked_json[0]['tier']
+							new_riot_verified_rank_tier = f'{riot_verified_rank_tier[0].upper()}{riot_verified_rank_tier[1:].lower()}'
 							riot_verified_rank_division = ranked_json[0]['rank']
-							riot_verified_rank = f'{riot_verified_rank_tier[0].upper()}{riot_verified_rank_tier[1:].lower()} {riot_verified_rank_division}'
+							riot_verified_rank = f'{new_riot_verified_rank_tier} {riot_verified_rank_division}'
 						except KeyError:
 							try:
 								fail_message = message.reply(f"""There was an error fetching your ranked info: `{ranked_json['status']['message']}`\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
@@ -229,44 +230,21 @@ def inbox_reply_stream(mp_lock, reddit, request_headers, iteration=1):
 
 					if fail_message is None:
 						# find the flair template ID for the summoner's ranked tier
-						if riot_verified_rank.startswith('Iron'):
-							flair_template_id = '02ffc88c-de8d-11ea-b61c-0e68680acae9'
-						elif riot_verified_rank.startswith('Bronze'):
-							flair_template_id = '0c755e18-de8d-11ea-bbc0-0ec8330c3f45'
-						elif riot_verified_rank.startswith('Silver'):
-							flair_template_id = '0e2281fa-de8d-11ea-b1b5-0e924619d27b'
-						elif riot_verified_rank.startswith('Gold'):
-							flair_template_id = '10e74358-de8d-11ea-958d-0e6b190ecc7b'
-						elif riot_verified_rank.startswith('Platinum'):
-							flair_template_id = '13fd6a4a-de8d-11ea-928c-0e8484cf5443'
-						elif riot_verified_rank.startswith('Diamond'):
-							flair_template_id = '16723b66-de8d-11ea-9ce7-0e3953cf8987'
-						elif riot_verified_rank.startswith('Master'):
-							riot_verified_rank = 'Master'
-							flair_template_id = '48b9e132-de8d-11ea-a71f-0e762dd480fb'
-						elif riot_verified_rank.startswith('Grandmaster'):
-							riot_verified_rank = 'Grandmaster'
-							flair_template_id = '4c638c7a-de8d-11ea-b264-0ef6b978cbfb'
-						elif riot_verified_rank.startswith('Challenger'):
-							riot_verified_rank = 'Challenger'
-							flair_template_id = '4f4a4d5c-de8d-11ea-b610-0efb666e413f'
-						else:
-							riot_verified_rank = 'Unranked'
+						flair_template_id = config.RANKED_TIER_FLAIR_DICT[new_riot_verified_rank_tier]
+						if new_riot_verified_rank_tier in ['Master', 'Grandmaster', 'Challenger']:
+							riot_verified_rank = new_riot_verified_rank_tier
 
+						# prepare the redditor's ranked flair
 						flair_prefix = riot_verified_rank
 						flair_suffix = ''
 						if custom_flair is not None:
 							flair_suffix = f' | {custom_flair}'
 
-						if riot_verified_rank == 'Unranked':
-							# send the redditor a message
-							message.reply(f"""Your verified summoner account `{riot_summoner_name}` is currently `{riot_verified_rank}`. Your flair on r/{config.HOME_SUBREDDIT} has not been updated, please get ranked to update your flair!\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
-						else:
-							# update the redditor's flair in the subreddit
-							subreddit.flair.set(message.author.name, text=f':{riot_verified_rank_tier.lower()[:4]}: {riot_verified_rank}{flair_suffix}', flair_template_id=flair_template_id)
+						# update the redditor's flair in the subreddit
+						subreddit.flair.set(message.author.name, text=f':{riot_verified_rank_tier.lower()[:4]}: {riot_verified_rank}{flair_suffix}', flair_template_id=flair_template_id)
 
-							# send the redditor a confirmation message
-							message.reply(f"""Your verified summoner account `{riot_summoner_name}` is currently `{riot_verified_rank}`. Your flair on r/{config.HOME_SUBREDDIT} has been updated!\n\nIf you want to make any changes you can [click here]({config.START_VERIF_MSG_LINK}) to start over.""")
+						# send the redditor a confirmation message
+						message.reply(f"""Your verified summoner account `{riot_summoner_name}` is currently `{riot_verified_rank}`. Your flair on r/{config.HOME_SUBREDDIT} has been updated!\n\nIf you want to make any changes you can [click here]({config.START_VERIF_MSG_LINK}) to start over.""")
 
 						# update the redditor in the database
 						query = 'UPDATE flaired_redditors SET riot_verified = True, riot_verified_rank = %s, custom_flair = %s WHERE reddit_username = %s'
