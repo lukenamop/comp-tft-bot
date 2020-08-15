@@ -368,7 +368,7 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 					print(f'auto-updater skipped u/{reddit_username}, Unranked')
 				else:
 					# if it has changed, update the redditor's flair in the subreddit
-					if current_redditor_flair != f':{riot_verified_rank_tier.lower()[:4]}: {riot_verified_rank}{flair_suffix}':
+					if current_redditor_flair['flair_text'] != f':{riot_verified_rank_tier.lower()[:4]}: {riot_verified_rank}{flair_suffix}':
 						subreddit.flair.set(reddit_username, text=f':{riot_verified_rank_tier.lower()[:4]}: {riot_verified_rank}{flair_suffix}', flair_template_id=flair_template_id)
 						print(f'auto-updater triggered for u/{reddit_username}: {riot_verified_rank}{flair_suffix}')
 					else:
