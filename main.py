@@ -291,7 +291,6 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 		# iterate through all redditors
 		redditors_to_update = len(results)
 		for redditor in results:
-			redditors_to_update -= 1
 			fail_message = None
 			reddit_username, riot_region, riot_summoner_name, riot_summoner_id, riot_verified_rank, custom_flair = redditor
 			# request the summoner's ranked info from riot
@@ -305,6 +304,7 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 			except KeyError:
 				try:
 					print(f"""auto-updater {ranked_json['status']['status_code']} error fetching ranked info: u/{reddit_username} -- {riot_summoner_name} -- {riot_region}: {ranked_json['status']['message']}""")
+					fail_message = ''
 				except KeyError:
 					print(f'auto-updater unknown error fetching summoner: u/{reddit_username} -- {riot_summoner_name} -- {riot_region}')
 					fail_message = ''
@@ -389,7 +389,7 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 	if iteration <= config.OVERFLOW:
 		ranked_flair_updater(mp_lock, reddit, request_headers, iteration)
 	else:
-		print(f'killing ranked flair updater, >{config.OVERFLOW} skipped messages')
+		print(f'killing ranked flair updater, >{config.OVERFLOW} skipped auto-update')
 
 
 ##### CODE TO RUN AT LAUNCH #####
