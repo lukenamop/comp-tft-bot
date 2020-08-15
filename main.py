@@ -370,6 +370,7 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 
 				if new_riot_verified_rank == 'Unranked':
 					# print(f'auto-updater skipped u/{reddit_username}, Unranked')
+					pass
 				else:
 					# TODO: check lockout
 					# if it has changed, update the redditor's flair in the subreddit
