@@ -298,9 +298,12 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 
 	subreddit = reddit.subreddit(config.HOME_SUBREDDIT)
 
+	# check to see if the auto-updater flair decay lockout is active
+	decay_lockout = False
 	datetime_now = datetime.datetime.now()
-	print(f'now greater than lockout start: {datetime_now > config.AUTO_UPDATE_LOCKOUT_START_DATETIME}')
-	print(f'now greater than lockout end: {datetime_now > config.AUTO_UPDATE_LOCKOUT_END_DATETIME}')
+	if datetime_now > config.AUTO_UPDATE_LOCKOUT_START_DATETIME and datetime_now < config.AUTO_UPDATE_LOCKOUT_END_DATETIME:
+		decay_lockout = True
+		print('auto-updater flair decay lockout is active')
 
 	try:
 		# fetch all redditors from the database
@@ -330,68 +333,88 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 			except IndexError:
 				# print(f'auto-updater skipped u/{reddit_username}, Unranked')
 				fail_message = ''
-				# TODO: check lockout
-				# update the redditor in the database
-				query = 'UPDATE flaired_redditors SET riot_verified_rank = %s, custom_flair = %s WHERE reddit_username = %s'
-				q_args = ['Unranked', custom_flair, reddit_username]
-				execute_sql(query, q_args)
-				connect.db_conn.commit()
+				# if not locked out of decay, update the redditor in the database
+				if not decay_lockout:
+					query = 'UPDATE flaired_redditors SET riot_verified_rank = %s, custom_flair = %s WHERE reddit_username = %s'
+					q_args = ['Unranked', custom_flair, reddit_username]
+					execute_sql(query, q_args)
+					connect.db_conn.commit()
 
 			if fail_message is None:
-				# find the flair template ID for the summoner's ranked tier
-				if new_riot_verified_rank_tier == 'Iron':
-					flair_template_id = '02ffc88c-de8d-11ea-b61c-0e68680acae9'
-				elif new_riot_verified_rank_tier == 'Bronze':
-					flair_template_id = '0c755e18-de8d-11ea-bbc0-0ec8330c3f45'
-				elif new_riot_verified_rank_tier == 'Silver':
-					flair_template_id = '0e2281fa-de8d-11ea-b1b5-0e924619d27b'
-				elif new_riot_verified_rank_tier == 'Gold':
-					flair_template_id = '10e74358-de8d-11ea-958d-0e6b190ecc7b'
-				elif new_riot_verified_rank_tier == 'Platinum':
-					flair_template_id = '13fd6a4a-de8d-11ea-928c-0e8484cf5443'
-				elif new_riot_verified_rank_tier == 'Diamond':
-					flair_template_id = '16723b66-de8d-11ea-9ce7-0e3953cf8987'
-				elif new_riot_verified_rank_tier == 'Master':
-					new_riot_verified_rank = new_riot_verified_rank_tier
-					flair_template_id = '48b9e132-de8d-11ea-a71f-0e762dd480fb'
-				elif new_riot_verified_rank_tier == 'Grandmaster':
-					new_riot_verified_rank = new_riot_verified_rank_tier
-					flair_template_id = '4c638c7a-de8d-11ea-b264-0ef6b978cbfb'
-				elif new_riot_verified_rank_tier == 'Challenger':
-					new_riot_verified_rank = new_riot_verified_rank_tier
-					flair_template_id = '4f4a4d5c-de8d-11ea-b610-0efb666e413f'
-				else:
-					new_riot_verified_rank = 'Unranked'
+				update_flair = True
+				# if locked out of decay, compare the redditor's old flair to the updated flair
+				if decay_lockout:
+					old_riot_verified_rank_tier = riot_verified_rank.split()[0]
+					try:
+						old_riot_verified_rank_division = riot_verified_rank.split()[1]
+					except IndexError:
+						old_riot_verified_rank_division = 'I'
 
-				flair_prefix = new_riot_verified_rank
-				flair_suffix = ''
-				if custom_flair is not None:
-					flair_suffix = f' | {custom_flair}'
+					update_flair = False
+					if config.RANKED_TIER_DICT[new_riot_verified_rank_tier] > config.RANKED_TIER_DICT[old_riot_verified_rank_tier]:
+						update_flair = True
+					elif config.RANKED_TIER_DICT[new_riot_verified_rank_tier] == config.RANKED_TIER_DICT[old_riot_verified_rank_tier]:
+						if config.RANKED_DIV_DICT[new_riot_verified_rank_division] > config.RANKED_DIV_DICT[old_riot_verified_rank_division]:
+							update_flair = True
 
-				# find the redditor's existing flair
-				current_sub_flair = reddit.subreddit(config.HOME_SUBREDDIT).flair(redditor=reddit_username, limit=1)
-				current_redditor_flair = None
-				for flair in current_sub_flair:
-					current_redditor_flair = flair['flair_text']
-
-				if new_riot_verified_rank == 'Unranked':
-					# print(f'auto-updater skipped u/{reddit_username}, Unranked')
+				if not update_flair:
+					print(f'auto-updater skipped u/{reddit_username}, flair decay lockout')
 					pass
 				else:
-					# TODO: check lockout
-					# if it has changed, update the redditor's flair in the subreddit
-					if current_redditor_flair != f':{new_riot_verified_rank_tier.lower()[:4]}: {new_riot_verified_rank}{flair_suffix}':
-						subreddit.flair.set(reddit_username, text=f':{new_riot_verified_rank_tier.lower()[:4]}: {new_riot_verified_rank}{flair_suffix}', flair_template_id=flair_template_id)
-						print(f'auto-updater triggered for u/{reddit_username}: {new_riot_verified_rank}{flair_suffix}')
+					# find the flair template ID for the summoner's ranked tier
+					if new_riot_verified_rank_tier == 'Iron':
+						flair_template_id = '02ffc88c-de8d-11ea-b61c-0e68680acae9'
+					elif new_riot_verified_rank_tier == 'Bronze':
+						flair_template_id = '0c755e18-de8d-11ea-bbc0-0ec8330c3f45'
+					elif new_riot_verified_rank_tier == 'Silver':
+						flair_template_id = '0e2281fa-de8d-11ea-b1b5-0e924619d27b'
+					elif new_riot_verified_rank_tier == 'Gold':
+						flair_template_id = '10e74358-de8d-11ea-958d-0e6b190ecc7b'
+					elif new_riot_verified_rank_tier == 'Platinum':
+						flair_template_id = '13fd6a4a-de8d-11ea-928c-0e8484cf5443'
+					elif new_riot_verified_rank_tier == 'Diamond':
+						flair_template_id = '16723b66-de8d-11ea-9ce7-0e3953cf8987'
+					elif new_riot_verified_rank_tier == 'Master':
+						new_riot_verified_rank = new_riot_verified_rank_tier
+						flair_template_id = '48b9e132-de8d-11ea-a71f-0e762dd480fb'
+					elif new_riot_verified_rank_tier == 'Grandmaster':
+						new_riot_verified_rank = new_riot_verified_rank_tier
+						flair_template_id = '4c638c7a-de8d-11ea-b264-0ef6b978cbfb'
+					elif new_riot_verified_rank_tier == 'Challenger':
+						new_riot_verified_rank = new_riot_verified_rank_tier
+						flair_template_id = '4f4a4d5c-de8d-11ea-b610-0efb666e413f'
 					else:
-						# print(f'auto-updater skipped u/{reddit_username}, no change in flair')
-						pass
+						new_riot_verified_rank = 'Unranked'
 
-				# update the redditor in the database
-				query = 'UPDATE flaired_redditors SET riot_verified_rank = %s, custom_flair = %s WHERE reddit_username = %s'
-				q_args = [riot_verified_rank, custom_flair, reddit_username]
-				execute_sql(query, q_args)
-				connect.db_conn.commit()
+					flair_prefix = new_riot_verified_rank
+					flair_suffix = ''
+					if custom_flair is not None:
+						flair_suffix = f' | {custom_flair}'
+
+					# find the redditor's existing flair
+					current_sub_flair = reddit.subreddit(config.HOME_SUBREDDIT).flair(redditor=reddit_username, limit=1)
+					current_redditor_flair = None
+					for flair in current_sub_flair:
+						current_redditor_flair = flair['flair_text']
+
+					if new_riot_verified_rank == 'Unranked':
+						# print(f'auto-updater skipped u/{reddit_username}, Unranked')
+						pass
+					else:
+						# TODO: check lockout
+						# if it has changed, update the redditor's flair in the subreddit
+						if current_redditor_flair != f':{new_riot_verified_rank_tier.lower()[:4]}: {new_riot_verified_rank}{flair_suffix}':
+							subreddit.flair.set(reddit_username, text=f':{new_riot_verified_rank_tier.lower()[:4]}: {new_riot_verified_rank}{flair_suffix}', flair_template_id=flair_template_id)
+							print(f'auto-updater triggered for u/{reddit_username}: {new_riot_verified_rank}{flair_suffix}')
+						else:
+							# print(f'auto-updater skipped u/{reddit_username}, no change in flair')
+							pass
+
+					# update the redditor in the database
+					query = 'UPDATE flaired_redditors SET riot_verified_rank = %s, custom_flair = %s WHERE reddit_username = %s'
+					q_args = [riot_verified_rank, custom_flair, reddit_username]
+					execute_sql(query, q_args)
+					connect.db_conn.commit()
 
 			# sleep for a few seconds before updating the next redditor
 			time.sleep(config.AUTO_UPDATE_SLEEP_TIME)
