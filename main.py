@@ -171,7 +171,7 @@ def inbox_reply_stream(mp_lock, reddit, request_headers, iteration=1):
 
 						# send the redditor instructions to complete verification
 						message.reply(f'Your unique verification key is `{riot_verification_key}`. To complete verification, follow these steps:'
-							+ '\n\n1. Open the **League of Legends** launcher'
+							+ '\n\n1. Open the **League of Legends** client'
 							+ '\n2. Click the **Settings** cog in the top right'
 							+ '\n3. On the left-hand side, scroll all the way down to the **Verification** tab'
 							+ f'\n4. Enter your unique verification key (`{riot_verification_key}`)'
@@ -215,6 +215,12 @@ def inbox_reply_stream(mp_lock, reddit, request_headers, iteration=1):
 							except KeyError:
 								fail_message = message.reply(f"""There was an unknown error fetching your ranked info. If this issue continues, please contact u/lukenamop.\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
 								print(f'unknown error fetching summoner: u/{message.author.name} -- {riot_summoner_name} -- {riot_region}')
+						except IndexError:
+							# clear the redditor's flair in the subreddit
+							subreddit.flair.delete(message.author.name)
+
+							# send the redditor a message
+							fail_message = message.reply(f"""Your verified summoner account `{riot_summoner_name}` is currently `{riot_verified_rank}`. Your flair on r/{config.HOME_SUBREDDIT} has not been updated, please get ranked to update your flair!\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
 
 					if fail_message is None:
 						# find the flair template ID for the summoner's ranked tier
@@ -241,7 +247,6 @@ def inbox_reply_stream(mp_lock, reddit, request_headers, iteration=1):
 							flair_template_id = '4f4a4d5c-de8d-11ea-b610-0efb666e413f'
 						else:
 							riot_verified_rank = 'Unranked'
-							flair_template_id = '27606de4-de92-11ea-ac55-0e9a4c7d6a21'
 
 						flair_prefix = riot_verified_rank
 						flair_suffix = ''
