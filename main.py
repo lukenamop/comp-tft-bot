@@ -337,7 +337,7 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 							update_flair = True
 
 				if not update_flair:
-					print(f'auto-updater skipped u/{reddit_username}, flair decay lockout')
+					# print(f'auto-updater skipped u/{reddit_username}, flair decay lockout')
 					pass
 				else:
 					# find the flair template ID for the summoner's ranked tier
