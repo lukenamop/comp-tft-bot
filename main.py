@@ -298,7 +298,7 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 	subreddit = reddit.subreddit(config.HOME_SUBREDDIT)
 	try:
 		# fetch all redditors from the database
-		query = 'SELECT reddit_username, riot_region, riot_summoner_id, custom_flair FROM flaired_redditors WHERE riot_verified = True'
+		query = 'SELECT reddit_username, riot_region, riot_summoner_id, riot_verified_rank, custom_flair FROM flaired_redditors WHERE riot_verified = True'
 		execute_sql(query)
 		results = connect.db_crsr.fetchall()
 		# iterate through all redditors
@@ -306,14 +306,15 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 		for redditor in results:
 			redditors_to_update -= 1
 			fail_message = None
-			reddit_username, riot_region, riot_summoner_id, custom_flair = redditor
+			reddit_username, riot_region, riot_summoner_id, riot_verified_rank, custom_flair = redditor
 			# request the summoner's ranked info from riot
 			ranked_request = requests.get(f"""https://{riot_region}.api.riotgames.com/tft/league/v1/entries/by-summoner/{riot_summoner_id}""", headers=request_headers)
 			ranked_json = ranked_request.json()
 			try:
-				riot_verified_rank_tier = ranked_json[0]['tier']
-				riot_verified_rank_division = ranked_json[0]['rank']
-				riot_verified_rank = f'{riot_verified_rank_tier[0].upper()}{riot_verified_rank_tier[1:].lower()} {riot_verified_rank_division}'
+				new_riot_verified_rank_tier = ranked_json[0]['tier']
+				new_riot_verified_rank_tier = f'{new_riot_verified_rank_tier[0].upper()}{new_riot_verified_rank_tier[1:].lower()}'
+				new_riot_verified_rank_division = ranked_json[0]['rank']
+				new_riot_verified_rank = f'{new_riot_verified_rank_tier} {new_riot_verified_rank_division}'
 			except KeyError:
 				try:
 					print(f"""auto-updater {ranked_json['status']['status_code']} error fetching ranked info: u/{reddit_username} -- {riot_summoner_name} -- {riot_region}: {ranked_json['status']['message']}""")
@@ -323,7 +324,7 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 			except IndexError:
 				print(f'auto-updater skipped u/{reddit_username}, Unranked')
 				fail_message = ''
-
+				# TODO: check lockout
 				# update the redditor in the database
 				query = 'UPDATE flaired_redditors SET riot_verified_rank = %s, custom_flair = %s WHERE reddit_username = %s'
 				q_args = ['Unranked', custom_flair, reddit_username]
@@ -332,31 +333,31 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 
 			if fail_message is None:
 				# find the flair template ID for the summoner's ranked tier
-				if riot_verified_rank.startswith('Iron'):
+				if new_riot_verified_rank_tier == 'Iron':
 					flair_template_id = '02ffc88c-de8d-11ea-b61c-0e68680acae9'
-				elif riot_verified_rank.startswith('Bronze'):
+				elif new_riot_verified_rank_tier == 'Bronze':
 					flair_template_id = '0c755e18-de8d-11ea-bbc0-0ec8330c3f45'
-				elif riot_verified_rank.startswith('Silver'):
+				elif new_riot_verified_rank_tier == 'Silver':
 					flair_template_id = '0e2281fa-de8d-11ea-b1b5-0e924619d27b'
-				elif riot_verified_rank.startswith('Gold'):
+				elif new_riot_verified_rank_tier == 'Gold':
 					flair_template_id = '10e74358-de8d-11ea-958d-0e6b190ecc7b'
-				elif riot_verified_rank.startswith('Platinum'):
+				elif new_riot_verified_rank_tier == 'Platinum':
 					flair_template_id = '13fd6a4a-de8d-11ea-928c-0e8484cf5443'
-				elif riot_verified_rank.startswith('Diamond'):
+				elif new_riot_verified_rank_tier == 'Diamond':
 					flair_template_id = '16723b66-de8d-11ea-9ce7-0e3953cf8987'
-				elif riot_verified_rank.startswith('Master'):
-					riot_verified_rank = 'Master'
+				elif new_riot_verified_rank_tier == 'Master':
+					new_riot_verified_rank = new_riot_verified_rank_tier
 					flair_template_id = '48b9e132-de8d-11ea-a71f-0e762dd480fb'
-				elif riot_verified_rank.startswith('Grandmaster'):
-					riot_verified_rank = 'Grandmaster'
+				elif new_riot_verified_rank_tier == 'Grandmaster':
+					new_riot_verified_rank = new_riot_verified_rank_tier
 					flair_template_id = '4c638c7a-de8d-11ea-b264-0ef6b978cbfb'
-				elif riot_verified_rank.startswith('Challenger'):
-					riot_verified_rank = 'Challenger'
+				elif new_riot_verified_rank_tier == 'Challenger':
+					new_riot_verified_rank = new_riot_verified_rank_tier
 					flair_template_id = '4f4a4d5c-de8d-11ea-b610-0efb666e413f'
 				else:
-					riot_verified_rank = 'Unranked'
+					new_riot_verified_rank = 'Unranked'
 
-				flair_prefix = riot_verified_rank
+				flair_prefix = new_riot_verified_rank
 				flair_suffix = ''
 				if custom_flair is not None:
 					flair_suffix = f' | {custom_flair}'
@@ -367,13 +368,14 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 				for flair in current_sub_flair:
 					current_redditor_flair = flair['flair_text']
 
-				if riot_verified_rank == 'Unranked':
+				if new_riot_verified_rank == 'Unranked':
 					print(f'auto-updater skipped u/{reddit_username}, Unranked')
 				else:
+					# TODO: check lockout
 					# if it has changed, update the redditor's flair in the subreddit
-					if current_redditor_flair != f':{riot_verified_rank_tier.lower()[:4]}: {riot_verified_rank}{flair_suffix}':
-						subreddit.flair.set(reddit_username, text=f':{riot_verified_rank_tier.lower()[:4]}: {riot_verified_rank}{flair_suffix}', flair_template_id=flair_template_id)
-						print(f'auto-updater triggered for u/{reddit_username}: {riot_verified_rank}{flair_suffix}')
+					if current_redditor_flair != f':{new_riot_verified_rank_tier.lower()[:4]}: {new_riot_verified_rank}{flair_suffix}':
+						subreddit.flair.set(reddit_username, text=f':{new_riot_verified_rank_tier.lower()[:4]}: {new_riot_verified_rank}{flair_suffix}', flair_template_id=flair_template_id)
+						print(f'auto-updater triggered for u/{reddit_username}: {new_riot_verified_rank}{flair_suffix}')
 					else:
 						print(f'auto-updater skipped u/{reddit_username}, no change in flair')
 
