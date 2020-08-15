@@ -88,16 +88,14 @@ def inbox_reply_stream(mp_lock, reddit, request_headers, iteration=1):
 						if riot_region == 'la':
 							try_riot_region = 'la1'
 							# request the summoner from riot
-							summoner_request = requests.get(f"""https://{try_riot_region}.api.riotgames.com/tft/summoner/v1/summoners/by-name/{riot_summoner_name}""", headers=request_headers)
-							summoner_json = summoner_request.json()
+							summoner_json = requests.get(f"""https://{try_riot_region}.api.riotgames.com/tft/summoner/v1/summoners/by-name/{riot_summoner_name}""", headers=request_headers).json()
 							try:
 								riot_summoner_id = summoner_json['id']
 								riot_region = try_riot_region
 							except KeyError:
 								try_riot_region = 'la2'
 								# request the summoner from riot
-								summoner_request = requests.get(f"""https://{try_riot_region}.api.riotgames.com/tft/summoner/v1/summoners/by-name/{riot_summoner_name}""", headers=request_headers)
-								summoner_json = summoner_request.json()
+								summoner_json = requests.get(f"""https://{try_riot_region}.api.riotgames.com/tft/summoner/v1/summoners/by-name/{riot_summoner_name}""", headers=request_headers).json()
 								try:
 									riot_summoner_id = summoner_json['id']
 									riot_region = try_riot_region
@@ -112,8 +110,7 @@ def inbox_reply_stream(mp_lock, reddit, request_headers, iteration=1):
 						# then check all other regions
 						if fail_message is None and riot_region not in ['la', 'la1', 'la2']:
 							# request the summoner from riot
-							summoner_request = requests.get(f"""https://{riot_region}.api.riotgames.com/tft/summoner/v1/summoners/by-name/{riot_summoner_name}""", headers=request_headers)
-							summoner_json = summoner_request.json()
+							summoner_json = requests.get(f"""https://{riot_region}.api.riotgames.com/tft/summoner/v1/summoners/by-name/{riot_summoner_name}""", headers=request_headers).json()
 							try:
 								riot_summoner_id = summoner_json['id']
 							except KeyError:
@@ -179,8 +176,7 @@ def inbox_reply_stream(mp_lock, reddit, request_headers, iteration=1):
 					if fail_message is None:
 						db_id, riot_region, riot_summoner_name, riot_summoner_id, riot_verification_key, custom_flair = result
 						# request the summoner's third party code from riot
-						third_party_code_request = requests.get(f"""https://{riot_region}.api.riotgames.com/lol/platform/v4/third-party-code/by-summoner/{riot_summoner_id}""", headers=request_headers)
-						third_party_code = third_party_code_request.text.strip('"')
+						third_party_code = requests.get(f"""https://{riot_region}.api.riotgames.com/lol/platform/v4/third-party-code/by-summoner/{riot_summoner_id}""", headers=request_headers).text.strip('"')
 
 						# check the summoner's third party code against their verification key in the database
 						if third_party_code != riot_verification_key:
@@ -188,13 +184,11 @@ def inbox_reply_stream(mp_lock, reddit, request_headers, iteration=1):
 
 					if fail_message is None:
 						# request the summoner's ranked info from riot
-						ranked_request = requests.get(f"""https://{riot_region}.api.riotgames.com/tft/league/v1/entries/by-summoner/{riot_summoner_id}""", headers=request_headers)
-						ranked_json = ranked_request.json()
+						ranked_json = requests.get(f"""https://{riot_region}.api.riotgames.com/tft/league/v1/entries/by-summoner/{riot_summoner_id}""", headers=request_headers).json()
 						try:
-							riot_verified_rank_tier = ranked_json[0]['tier']
-							new_riot_verified_rank_tier = f'{riot_verified_rank_tier[0].upper()}{riot_verified_rank_tier[1:].lower()}'
+							riot_verified_rank_tier = ranked_json[0]['tier'].capitalize()
 							riot_verified_rank_division = ranked_json[0]['rank']
-							riot_verified_rank = f'{new_riot_verified_rank_tier} {riot_verified_rank_division}'
+							riot_verified_rank = f'{riot_verified_rank_tier} {riot_verified_rank_division}'
 						except KeyError:
 							try:
 								fail_message = message.reply(f"""There was an error fetching your ranked info: `{ranked_json['status']['message']}`\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
@@ -215,9 +209,9 @@ def inbox_reply_stream(mp_lock, reddit, request_headers, iteration=1):
 
 					if fail_message is None:
 						# find the flair template ID for the summoner's ranked tier
-						flair_template_id = config.RANKED_TIER_FLAIR_DICT[new_riot_verified_rank_tier]
-						if new_riot_verified_rank_tier in ['Master', 'Grandmaster', 'Challenger']:
-							riot_verified_rank = new_riot_verified_rank_tier
+						flair_template_id = config.RANKED_TIER_FLAIR_DICT[riot_verified_rank_tier]
+						if riot_verified_rank_tier in ['Master', 'Grandmaster', 'Challenger']:
+							riot_verified_rank = riot_verified_rank_tier
 
 						# prepare the redditor's ranked flair
 						flair_prefix = riot_verified_rank
@@ -280,11 +274,9 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 			fail_message = None
 			reddit_username, riot_region, riot_summoner_name, riot_summoner_id, riot_verified_rank, custom_flair = redditor
 			# request the summoner's ranked info from riot
-			ranked_request = requests.get(f"""https://{riot_region}.api.riotgames.com/tft/league/v1/entries/by-summoner/{riot_summoner_id}""", headers=request_headers)
-			ranked_json = ranked_request.json()
+			ranked_json = requests.get(f"""https://{riot_region}.api.riotgames.com/tft/league/v1/entries/by-summoner/{riot_summoner_id}""", headers=request_headers).json()
 			try:
-				new_riot_verified_rank_tier = ranked_json[0]['tier']
-				new_riot_verified_rank_tier = f'{new_riot_verified_rank_tier[0].upper()}{new_riot_verified_rank_tier[1:].lower()}'
+				new_riot_verified_rank_tier = ranked_json[0]['tier'].capitalize()
 				new_riot_verified_rank_division = ranked_json[0]['rank']
 				new_riot_verified_rank = f'{new_riot_verified_rank_tier} {new_riot_verified_rank_division}'
 			except KeyError:
