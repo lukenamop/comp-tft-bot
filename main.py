@@ -247,11 +247,15 @@ def inbox_reply_stream(mp_lock, reddit, request_headers, iteration=1):
 						if custom_flair is not None:
 							flair_suffix = f' | {custom_flair}'
 
-						# update the redditor's flair in the subreddit
-						subreddit.flair.set(message.author.name, text=f'{riot_verified_rank}{flair_suffix}', flair_template_id=flair_template_id)
+						if riot_verified_rank == 'Unranked':
+							# send the redditor a message
+							message.reply(f"""Your verified summoner account `{riot_summoner_name}` is currently `{riot_verified_rank}`. Your flair on r/{config.HOME_SUBREDDIT} has not been updated, please get ranked to update your flair!\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
+						else:
+							# update the redditor's flair in the subreddit
+							subreddit.flair.set(message.author.name, text=f'{riot_verified_rank}{flair_suffix}', flair_template_id=flair_template_id)
 
-						# send the redditor a confirmation message
-						message.reply(f'Your verified summoner account `{riot_summoner_name}` is in `{riot_verified_rank}`. Your flair on r/{config.HOME_SUBREDDIT} has been updated! If you want to make any changes you can [click here]({config.START_VERIF_MSG_LINK}) to start over.')
+							# send the redditor a confirmation message
+							message.reply(f"""Your verified summoner account `{riot_summoner_name}` is currently `{riot_verified_rank}`. Your flair on r/{config.HOME_SUBREDDIT} has been updated!\n\nIf you want to make any changes you can [click here]({config.START_VERIF_MSG_LINK}) to start over.""")
 
 						# update the redditor in the database
 						query = 'UPDATE flaired_redditors SET riot_verified = True, riot_verified_rank = %s, custom_flair = %s WHERE reddit_username = %s'
