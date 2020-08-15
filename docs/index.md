@@ -1,37 +1,11 @@
-## Welcome to GitHub Pages
+# <img width=50 height=50 src="https://cdn.discordapp.com/attachments/622143865188646913/744205133143081000/competitivetft_pfp.png">&nbsp;&nbsp;<a href="https://www.reddit.com/user/CompetitiveTFTBot">u/CompetitiveTFTBot</a>
 
-You can use the [editor on GitHub](https://github.com/lukenamop/comp-tft-bot/edit/master/docs/index.md) to maintain and preview the content for your website in Markdown files.
+This is the source code for <a href="https://www.reddit.com/user/CompetitiveTFTBot">u/CompetitiveTFTBot</a>, a Reddit bot built for the <a href="https://www.reddit.com/r/CompetitiveTFT">r/CompetitiveTFT</a> subreddit.
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+# TFT Ranked Flair Verification
 
-### Markdown
+The bot has a verification flow to allow redditors on the <a href="https://www.reddit.com/r/CompetitiveTFT">r/CompetitiveTFT</a> subreddit to verify their TFT accounts and automatically receive ranked user flair. Previously, ranked flair verification was <a href="https://www.reddit.com/r/CompetitiveTFT/comments/ftuyau/masters_ranked_flair_request_thread/">done by hand here</a>, this bot takes care of the process for the moderator team so they can focus on other aspects of running the subreddit.
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+## Can this be used on other subreddits?
 
-```markdown
-Syntax highlighted code block
-
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
-```
-
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/lukenamop/comp-tft-bot/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+The code, as it is was written, is specifically for use on <a href="https://www.reddit.com/r/CompetitiveTFT">r/CompetitiveTFT</a> and would need a handful of changes to be compatible with other subreddits. If you run a subreddit that would benefit from this bot, please reach out to me on Discord at lukenamop#0918 and I would be happy to help you get it set up.
