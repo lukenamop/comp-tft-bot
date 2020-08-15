@@ -291,6 +291,7 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 		# iterate through all redditors
 		redditors_to_update = len(results)
 		for redditor in results:
+			redditors_to_update -= 1
 			fail_message = None
 			reddit_username, riot_region, riot_summoner_name, riot_summoner_id, riot_verified_rank, custom_flair = redditor
 			# request the summoner's ranked info from riot
