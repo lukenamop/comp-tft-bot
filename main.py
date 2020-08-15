@@ -262,7 +262,7 @@ def inbox_reply_stream(mp_lock, reddit, request_headers, iteration=1):
 							message.reply(f"""Your verified summoner account `{riot_summoner_name}` is currently `{riot_verified_rank}`. Your flair on r/{config.HOME_SUBREDDIT} has not been updated, please get ranked to update your flair!\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
 						else:
 							# update the redditor's flair in the subreddit
-							subreddit.flair.set(message.author.name, text=f':{riot_verified_rank_tier.lower()}:{riot_verified_rank}{flair_suffix}', flair_template_id=flair_template_id)
+							subreddit.flair.set(message.author.name, text=f':{riot_verified_rank_tier.lower()}: {riot_verified_rank}{flair_suffix}', flair_template_id=flair_template_id)
 
 							# send the redditor a confirmation message
 							message.reply(f"""Your verified summoner account `{riot_summoner_name}` is currently `{riot_verified_rank}`. Your flair on r/{config.HOME_SUBREDDIT} has been updated!\n\nIf you want to make any changes you can [click here]({config.START_VERIF_MSG_LINK}) to start over.""")
