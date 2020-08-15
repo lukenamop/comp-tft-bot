@@ -317,8 +317,10 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 					print(f"""auto-updater {ranked_json['status']['status_code']} error fetching ranked info: u/{reddit_username} -- {riot_summoner_name} -- {riot_region}: {ranked_json['status']['message']}""")
 				except KeyError:
 					print(f'auto-updater unknown error fetching summoner: u/{reddit_username} -- {riot_summoner_name} -- {riot_region}')
+					fail_message = ''
 			except IndexError:
 				print(f'auto-updater skipped u/{reddit_username}, no change in flair')
+				fail_message = ''
 
 				# update the redditor in the database
 				query = 'UPDATE flaired_redditors SET riot_verified_rank = %s, custom_flair = %s WHERE reddit_username = %s'
