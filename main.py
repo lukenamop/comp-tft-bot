@@ -199,12 +199,23 @@ def inbox_reply_stream(mp_lock, reddit, request_headers, iteration=1):
 						if third_party_code != riot_verification_key:
 							fail_message = message.reply(f"""Your verification key was incorrect.\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
 
-						# if fail_message is None:
+					if fail_message is None:
 						# request the summoner's ranked info from riot
 						ranked_request = requests.get(f"""https://{riot_region}.api.riotgames.com/tft/league/v1/entries/by-summoner/{riot_summoner_id}""", headers=request_headers)
 						ranked_json = ranked_request.json()
-						print(ranked_json)
-						return
+						try:
+							riot_verified_rank_tier = ranked_json[0]['tier']
+							riot_verified_rank_division = ranked_json[0]['rank']
+							riot_verified_rank = f'{riot_verified_rank_tier[0].upper()}{riot_verified_rank_tier[1:].lower()} {riot_verified_rank_division}'
+							print(riot_verified_rank)
+						except KeyError:
+							try:
+								fail_message = message.reply(f"""There was an error fetching your ranked info: `{ranked_json['status']['message']}`\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
+								print(f"""{ranked_json['status']['status_code']} error fetching ranked info: u/{message.author.name} -- {riot_summoner_name} -- {riot_region}: {ranked_json['status']['message']}""")
+							except KeyError:
+								fail_message = message.reply(f"""There was an unknown error fetching your ranked info. If this issue continues, please contact u/lukenamop.\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
+								print(f'unknown error fetching summoner: u/{message.author.name} -- {riot_summoner_name} -- {riot_region}')
+
 					if fail_message is None:
 						flair_suffix = ''
 						if custom_flair is not None:
