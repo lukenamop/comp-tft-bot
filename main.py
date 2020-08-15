@@ -412,5 +412,9 @@ def main():
 	inbox_reply_stream_process = Process(target=inbox_reply_stream, args=(mp_lock, reddit, request_headers,))
 	inbox_reply_stream_process.start()
 
+	# start the ranked flair updater
+	ranked_flair_updater_process = Process(target=ranked_flair_updater, args=(mp_lock, reddit, request_headers,))
+	ranked_flair_updater_process.start()
+
 if __name__ == '__main__':
 	main()
