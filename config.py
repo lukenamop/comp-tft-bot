@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 # import libraries
+import datetime
 import os
 
 ##### connect.py stuff
@@ -25,7 +26,14 @@ RIOT_API_TOKEN = os.environ['RIOT_API_TOKEN']
 CUSTOM_FLAIR_CHAR_LIM = 30
 # auto-updater sleep time between flair updates (seconds)
 AUTO_UPDATE_SLEEP_TIME = 15
-# dict of all ranked tiers
+# auto-updater flair decay lockout start (epoch timestamp)
+AUTO_UPDATE_LOCKOUT_START = 1597474800
+# auto-updater flair decay lockout duration (days)
+AUTO_UPDATE_LOCKOUT_DAYS = 30
+# auto-updater flair decay lockout start and end datetime objects
+AUTO_UPDATE_LOCKOUT_START_DATETIME = datetime.datetime.fromtimestamp(AUTO_UPDATE_LOCKOUT_START)
+AUTO_UPDATE_LOCKOUT_END_DATETIME = AUTO_UPDATE_LOCKOUT_START_DATETIME + datetime.timedelta(days=AUTO_UPDATE_LOCKOUT_DAYS)
+# dict of all ranked tiers and divisions
 RANKED_TIER_DICT = {
 	'Unranked': 0,
 	'Iron': 1,
@@ -37,6 +45,12 @@ RANKED_TIER_DICT = {
 	'Master': 7,
 	'Grandmaster': 8,
 	'Challenger': 9
+}
+RANKED_DIV_DICT = {
+	'IV': 0,
+	'III': 1,
+	'II': 2,
+	'I': 3
 }
 
 # verification message links

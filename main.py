@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 # import libraries
+import datetime
 import math
 import praw
 import prawcore
@@ -296,6 +297,12 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 	connect.db_connect('ranked flair update')
 
 	subreddit = reddit.subreddit(config.HOME_SUBREDDIT)
+
+	datetime_now = datetime.datetime.now()
+	print(f'epoch now: {datetime_now.timestamp()}')
+	print(f'lockout epoch start: {config.AUTO_UPDATE_LOCKOUT_START_DATETIME.timestamp()}')
+	print(f'lockout epoch end: {AUTO_UPDATE_LOCKOUT_END_DATETIME.timestamp()}')
+
 	try:
 		# fetch all redditors from the database
 		query = 'SELECT reddit_username, riot_region, riot_summoner_id, riot_verified_rank, custom_flair FROM flaired_redditors WHERE riot_verified = True'
@@ -399,6 +406,7 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 	except Exception as error:
 		print(f'skipping auto-update due to unknown error: {type(error)}: {error}')
 
+	# if the loop completes instead of erroring out, don't add an iteration towards the overflow limit
 	if redditors_to_update > 0:
 		iteration += 1
 
