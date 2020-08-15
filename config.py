@@ -64,6 +64,18 @@ RANKED_TIER_FLAIR_DICT = {
 	'Grandmaster': '4c638c7a-de8d-11ea-b264-0ef6b978cbfb',
 	'Challenger': '4f4a4d5c-de8d-11ea-b610-0efb666e413f'
 }
+REGION_DICT = {
+	'br': 'br1',
+	'eun': 'eun1',
+	'euw': 'euw1',
+	'jp': 'jp1',
+	'kr': 'kr',
+	'la': 'la',
+	'na': 'na1',
+	'oc': 'oc1',
+	'ru': 'ru',
+	'tr': 'tr1'
+}
 
 # verification message links
 START_VERIF_MSG_LINK = f'https://www.reddit.com/message/compose/?to=CompetitiveTFTBot&subject=r%2FCompetitiveTFT%20Ranked%20Flair%20Verification&message=Please%20type%20your%20Summoner%20Name%20below%20between%20the%20percent%20symbols%3A%0A%0A%25SUMMONER%20NAME%25%0A%0APlease%20type%20your%20Region%20below%20between%20the%20percent%20symbols.%20Your%20region%20must%20be%20one%20of%20these%20options%3A%20BR%20%2F%20EUN%20%2F%20EUW%20%2F%20JP%20%2F%20KR%20%2F%20LA%20%2F%20NA%20%2F%20OC%20%2F%20RU%20%2F%20TR%0A%0A%25REGION%25%0A%0APlease%20type%20your%20preferred%20Custom%20Flair%2C%20up%20to%20{CUSTOM_FLAIR_CHAR_LIM}%20characters%20%28it%20will%20appear%20like%20this%3A%20Grandmaster%20%7C%20Custom%20Flair%29%2C%20below%20between%20the%20percent%20symbols%3A%0A%0A%25CUSTOM%20FLAIR%25'

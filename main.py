@@ -71,30 +71,15 @@ def inbox_reply_stream(mp_lock, reddit, request_headers, iteration=1):
 						print(f'did not follow verification template: u/{message.author.name}')
 
 					if fail_message is None:
+						# strip numbers off of the provided region
+						riot_region = riot_region.translate(str.maketrans('', '', '0123456789'))
+
 						# make sure the provided region matches one of the options
-						if riot_region in ['br', 'br1']:
-							riot_region = 'br1'
-						elif riot_region in ['eun', 'eun1']:
-							riot_region = 'eun1'
-						elif riot_region in ['euw', 'euw1']:
-							riot_region = 'euw1'
-						elif riot_region in ['jp', 'jp1']:
-							riot_region = 'jp1'
-						elif riot_region in ['kr']:
-							riot_region = 'kr'
-						elif riot_region in ['la', 'la1', 'la2']:
-							riot_region = 'la'
-						elif riot_region in ['na', 'na1']:
-							riot_region = 'na1'
-						elif riot_region in ['oc', 'oc1']:
-							riot_region = 'oc1'
-						elif riot_region in ['ru']:
-							riot_region = 'ru'
-						elif riot_region in ['tr', 'tr1']:
-							riot_region = 'tr1'
-						else:
+						if riot_region not in config.REGION_DICT.keys():
 							fail_message = message.reply(f"""The region you provided, `{riot_region.upper()}`, was not valid.\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
 							print(f'invalid region: u/{message.author.name} -- {riot_summoner_name} -- {riot_region}')
+						else:
+							riot_region = config.REGION_DICT[riot_region]
 						
 					if fail_message is None:
 						riot_summoner_id = None
