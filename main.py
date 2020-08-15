@@ -64,7 +64,7 @@ def inbox_reply_stream(mp_lock, reddit, request_headers, iteration=1):
 						riot_region = unidecode(message.body.split('%')[3].split('%')[0]).lower().strip()
 						custom_flair = unidecode(message.body.split('%')[5].split('%')[0]).strip()
 						if len(custom_flair) > config.CUSTOM_FLAIR_LEN_LIM:
-							fail_message = message.reply(f"""Your custom flair `{}` was too long, it cannot be longer than 30 characters.\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
+							fail_message = message.reply(f"""Your custom flair `{custom_flair}` was too long, it cannot be longer than 30 characters.\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
 					except IndexError:
 						fail_message = message.reply(f"""It doesn't look like you followed the message template.\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
 						print(f'did not follow verification template: u/{message.author.name}')
