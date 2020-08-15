@@ -217,7 +217,14 @@ def inbox_reply_stream(mp_lock, reddit, request_headers, iteration=1):
 								print(f'unknown error fetching summoner: u/{message.author.name} -- {riot_summoner_name} -- {riot_region}')
 						except IndexError:
 							# send the redditor a message
-							fail_message = message.reply(f"""Your verified summoner account `{riot_summoner_name}` is currently `{riot_verified_rank}`. Your flair on r/{config.HOME_SUBREDDIT} has not been updated, please get ranked to update your flair!\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
+							fail_message = message.reply(f"""Your verified summoner account `{riot_summoner_name}` is currently `Unranked`. Your flair on r/{config.HOME_SUBREDDIT} has not been updated, please get ranked to update your flair!\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
+							print(f'ranked flair not updated for u/{message.author.name}')
+
+							# update the redditor in the database
+							query = 'UPDATE flaired_redditors SET riot_verified = True, riot_verified_rank = %s, custom_flair = %s WHERE reddit_username = %s'
+							q_args = ['Unranked', custom_flair, message.author.name]
+							execute_sql(query, q_args)
+							connect.db_conn.commit()
 
 					if fail_message is None:
 						# find the flair template ID for the summoner's ranked tier
