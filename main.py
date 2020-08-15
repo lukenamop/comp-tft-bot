@@ -299,9 +299,8 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 	subreddit = reddit.subreddit(config.HOME_SUBREDDIT)
 
 	datetime_now = datetime.datetime.now()
-	print(f'epoch now: {datetime_now.timestamp()}')
-	print(f'lockout epoch start: {config.AUTO_UPDATE_LOCKOUT_START_DATETIME.timestamp()}')
-	print(f'lockout epoch end: {config.AUTO_UPDATE_LOCKOUT_END_DATETIME.timestamp()}')
+	print(f'now greater than lockout start: {datetime_now > config.AUTO_UPDATE_LOCKOUT_START_DATETIME}')
+	print(f'now greater than lockout end: {datetime_now > config.AUTO_UPDATE_LOCKOUT_END_DATETIME}')
 
 	try:
 		# fetch all redditors from the database
