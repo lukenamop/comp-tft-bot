@@ -58,8 +58,13 @@ def inbox_reply_stream(mp_lock, reddit, request_headers, iteration=1):
 					# check to see if the message template was followed
 					fail_message = None
 					try:
-						riot_summoner_name = unidecode(message.body.split('%')[1].split('%')[0])
-						riot_region = unidecode(message.body.split('%')[3].split('%')[0]).lower()
+						riot_summoner_name = unidecode(message.body.split('%')[1].split('%')[0]).strip()
+						if len(riot_summoner_name) > 30:
+							fail_message = message.reply(f"""There was an error fetching your summoner profile.\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
+						riot_region = unidecode(message.body.split('%')[3].split('%')[0]).lower().strip()
+						custom_flair = unidecode(message.body.split('%')[5].split('%')[0]).strip()
+						if len(custom_flair) > config.CUSTOM_FLAIR_LEN_LIM:
+							fail_message = message.reply(f"""Your custom flair `{}` was too long, it cannot be longer than 30 characters.\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
 					except IndexError:
 						fail_message = message.reply(f"""It doesn't look like you followed the message template.\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
 						print(f'did not follow verification template: u/{message.author.name}')
@@ -134,22 +139,35 @@ def inbox_reply_stream(mp_lock, reddit, request_headers, iteration=1):
 									print(f'unknown error fetching summoner: u/{message.author.name} -- {riot_summoner_name} -- {riot_region}')
 
 					if fail_message is None:
+						# parse the custom flair
+						if custom_flair in ['CUSTOM FLAIR', '']:
+							custom_flair = None
+
 						# generate random 6 character string excluding unwanted_chars
 						unwanted_chars = ["0", "O", "l", "I"]
 						char_choices = [char for char in string.ascii_letters if char not in unwanted_chars] + [char for char in string.digits if char not in unwanted_chars]
 						riot_verification_key = ''.join(random.choices(char_choices, k=6))
 
-						# only allow one database entry per redditor
-						query = 'DELETE FROM flaired_redditors WHERE reddit_username = %s'
+						# see if the redditor exists in the database
+						redditor_exists = False
+						query = 'SELECT db_id, custom_flair FROM flaired_redditors WHERE reddit_username = %s'
 						q_args = [message.author.name]
 						execute_sql(query, q_args)
-						connect.db_conn.commit()
+						if connect.db_crsr.fetchone() is not None:
+							redditor_exists = True
 
-						# add the redditor to the database
-						query = 'INSERT INTO flaired_redditors (reddit_username, riot_region, riot_summoner_name, riot_summoner_id, riot_verification_key) VALUES (%s, %s, %s, %s, %s)'
-						q_args = [message.author.name, riot_region, riot_summoner_name, riot_summoner_id, riot_verification_key]
-						execute_sql(query, q_args)
-						connect.db_conn.commit()
+						# if the redditor doesn't exist, add them to the database
+						if not redditor_exists:
+							query = 'INSERT INTO flaired_redditors (reddit_username, riot_region, riot_summoner_name, riot_summoner_id, riot_verification_key, custom_flair) VALUES (%s, %s, %s, %s, %s, %s)'
+							q_args = [message.author.name, riot_region, riot_summoner_name, riot_summoner_id, riot_verification_key, custom_flair]
+							execute_sql(query, q_args)
+							connect.db_conn.commit()
+						# if the redditor exists, update them in the database
+						else:
+							query = 'UPDATE flaired_redditors SET riot_region = %s, riot_summoner_name = %s, riot_summoner_id = %s, riot_verification_key = %s, custom_flair = %s WHERE reddit_username = %s'
+							q_args = [riot_region, riot_summoner_name, riot_summoner_id, riot_verification_key, custom_flair, message.author.name]
+							execute_sql(query, q_args)
+							connect.db_conn.commit()
 
 						# send the redditor instructions to complete verification
 						message.reply(f'Your unique verification key is `{riot_verification_key}`. To complete verification, follow these steps:'
@@ -164,7 +182,7 @@ def inbox_reply_stream(mp_lock, reddit, request_headers, iteration=1):
 				if message.subject == 'r/CompetitiveTFT Ranked Flair Verification - Part 2':
 					# search for the redditor in the database
 					fail_message = None
-					query = 'SELECT db_id, riot_region, riot_summoner_name, riot_summoner_id, riot_verification_key FROM flaired_redditors WHERE reddit_username = %s'
+					query = 'SELECT db_id, riot_region, riot_summoner_name, riot_summoner_id, riot_verification_key, custom_flair FROM flaired_redditors WHERE reddit_username = %s'
 					q_args = [message.author.name]
 					execute_sql(query, q_args)
 					result = connect.db_crsr.fetchone()
@@ -172,7 +190,7 @@ def inbox_reply_stream(mp_lock, reddit, request_headers, iteration=1):
 						fail_message = message.reply(f"""It looks like you haven't completed the first step of verification.\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
 
 					if fail_message is None:
-						db_id, riot_region, riot_summoner_name, riot_summoner_id, riot_verification_key = result
+						db_id, riot_region, riot_summoner_name, riot_summoner_id, riot_verification_key, custom_flair = result
 						# request the summoner's third party code from riot
 						third_party_code_request = requests.get(f"""https://{riot_region}.api.riotgames.com/lol/platform/v4/third-party-code/by-summoner/{riot_summoner_id}""", headers=request_headers)
 						third_party_code = third_party_code_request.text.strip('"')
@@ -181,9 +199,18 @@ def inbox_reply_stream(mp_lock, reddit, request_headers, iteration=1):
 						if third_party_code != riot_verification_key:
 							fail_message = message.reply(f"""Your verification key was incorrect.\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
 
+						# request the summoner's ranked info from riot
+						ranked_request = requests.get(f"""https://{riot_region}.api.riotgames.com/tft/league/v1/entries/by-summoner/{riot_summoner_id}""")
+						ranked_json = ranked_request.json()
+						print(ranked_json)
+						return
+
 					if fail_message is None:
+						flair_suffix = ''
+						if custom_flair is not None:
+							flair_suffix = f' | {custom_flair}'
 						# update the redditor's flair in the subreddit
-						reddit.subreddit
+						# subreddit.flair.set(message.author.name, text=f'{}{flair_suffix}', css_class='')
 
 	except prawcore.exceptions.ServerError as error:
 		print(f'skipping message due to PRAW error: {type(error)}: {error}')
