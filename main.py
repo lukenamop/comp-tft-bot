@@ -285,7 +285,7 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 
 	try:
 		# fetch all redditors from the database
-		query = 'SELECT reddit_username, riot_region, riot_summoner_id, riot_verified_rank, custom_flair FROM flaired_redditors WHERE riot_verified = True'
+		query = 'SELECT reddit_username, riot_region, riot_summoner_name, riot_summoner_id, riot_verified_rank, custom_flair FROM flaired_redditors WHERE riot_verified = True'
 		execute_sql(query)
 		results = connect.db_crsr.fetchall()
 		# iterate through all redditors
@@ -293,7 +293,7 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 		for redditor in results:
 			redditors_to_update -= 1
 			fail_message = None
-			reddit_username, riot_region, riot_summoner_id, riot_verified_rank, custom_flair = redditor
+			reddit_username, riot_region, riot_summoner_name, riot_summoner_id, riot_verified_rank, custom_flair = redditor
 			# request the summoner's ranked info from riot
 			ranked_request = requests.get(f"""https://{riot_region}.api.riotgames.com/tft/league/v1/entries/by-summoner/{riot_summoner_id}""", headers=request_headers)
 			ranked_json = ranked_request.json()
