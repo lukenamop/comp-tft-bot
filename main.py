@@ -394,13 +394,13 @@ def new_comment_stream(mp_lock, reddit, request_headers, iteration=1):
 					search_string = '%20'.join(args)
 					search_list = requests.get(f"""http://api.pushshift.io/reddit/search/submission/?title={search_string}&subreddit={config.PUSHSH_SUB}&after={config.PUSHSH_TIMEFRAME}&sort_type={config.PUSHSH_SORT}&sort=desc&fields=author,full_link,id,link_flair_text,num_comments,score,selftext,title,url&size={config.PUSHSH_SIZE}""").json()['data']
 					# start building a comment response
-					response = f"""Top %NUM% `{' '.join(args)}` guides from the past {config.PUSHSH_TIMEFRAME}:"""
+					response = f"""Top %NUM% `{' '.join(args)}` guides from the past {config.PUSHSH_TIMEFRAME}:\n"""
 					num_results = 0
 					if len(search_list) > 0:
 						for search_result in search_list:
 							# only return guide submissions
 							if search_result['link_flair_text'] == 'GUIDE':
-								response += f"""\n\n- [{search_result['title']}]({search_result['full_link']}) from u/{search_result['author']}"""
+								response += f"""\n- [{search_result['title']}]({search_result['full_link']}) from u/{search_result['author']}"""
 								num_results += 1
 							if num_results >= 5:
 								break
