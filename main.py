@@ -399,10 +399,11 @@ def new_comment_stream(mp_lock, reddit, request_headers, iteration=1):
 					if len(search_list) > 0:
 						for search_result in search_list:
 							# only return guide submissions
-							if search_result['link_flair_text'] == 'GUIDE':
-								response += f"""\n- [{search_result['title']}]({search_result['full_link']}) from u/{search_result['author']}"""
-								num_results += 1
-							if num_results >= 5:
+							if 'link_flair_text' in search_result:
+								if search_result['link_flair_text'] == 'GUIDE':
+									response += f"""\n- [{search_result['title']}]({search_result['full_link']}) from u/{search_result['author']}"""
+									num_results += 1
+							if num_results >= config.GUIDE_LIMIT:
 								break
 
 					# if no results were found, send a specific reply
