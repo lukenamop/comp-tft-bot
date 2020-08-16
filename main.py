@@ -386,7 +386,7 @@ def new_comment_stream(mp_lock, reddit, request_headers, iteration=1):
 			if comment.body.startswith(config.R_CMD_PREFIX):
 				# parse commands from new comments
 				comment_body = comment.body.lstrip(config.R_CMD_PREFIX)
-				command = comment_body.split()[0].lower
+				command = comment_body.split()[0].lower()
 				args = comment_body.split()[1:]
 				print(f'command: {command}\nargs: {args}')
 
