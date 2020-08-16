@@ -414,7 +414,7 @@ def new_comment_stream(mp_lock, reddit, request_headers, iteration=1):
 
 					# reply to the command
 					comment.reply(response)
-					print(f"""search from u/{comment.author.name} - {' '.join(args)}""")
+					print(f"""guide search from u/{comment.author.name}, {num_results} results: {' '.join(args)}""")
 
 	except prawcore.exceptions.ServerError as error:
 		print(f'skipping new comment due to PRAW error: {type(error)}: {error}')
