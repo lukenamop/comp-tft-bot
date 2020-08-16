@@ -383,15 +383,27 @@ def submission_reply_stream(mp_lock, reddit, iteration=1):
 	try:
 		# iterate through all new submissions indefinitely
 		for submission in subreddit.stream.submissions(skip_existing=True):
+			respond_to_submission = False
+			
 			# only comment on submissions with specific flair
+			if hasattr(submission, 'link_flair_id'):
+				print(submission.link_flair_id)
+
 			if hasattr(submission, 'link_flair_text'):
 				print(submission.link_flair_text)
 				if submission.link_flair_text == 'GUIDE':
-					# submit a comment reply
-					reply = submission.reply(f"""Thank you for your guide submission! We've added it to our guide submission index. You can search for other guides by replying to this comment with `{config.R_CMD_PREFIX}guide <keyword> <timeframe>`, for example `{config.R_CMD_PREFIX}guide mech 30` to see all mech guides from the past month.\n\n^^(What do you think of this new feature? [Let the mod team know!](www.reddit.com/message/compose?to=/r/CompetitiveTFT&subject=My%20thoughts%20on%20the%20new%20sub%20bot))""")
-					# distinguish and sticky the comment reply
-					reply.mod.distinguish(how='yes', sticky=True)
-					print(f"""guide submission from u/{comment.author.name}""")
+					respond_to_submission = True
+
+			# make sure the submission is actually new
+			if submission.created_utc < (time.time() - 60 * 30):
+				respond_to_submission = False
+
+			if respond_to_submission:
+				# submit a comment reply
+				reply = submission.reply(f"""Thank you for your guide submission! We've added it to our guide submission index. You can search for other guides by replying to this comment with `{config.R_CMD_PREFIX}guide <keyword> <timeframe>`, for example `{config.R_CMD_PREFIX}guide mech 30` to see all mech guides from the past month.\n\n^^(What do you think of this new feature? [Let the mod team know!](www.reddit.com/message/compose?to=/r/CompetitiveTFT&subject=My%20thoughts%20on%20the%20new%20sub%20bot))""")
+				# distinguish and sticky the comment reply
+				reply.mod.distinguish(how='yes', sticky=True)
+				print(f"""guide submission from u/{comment.author.name}""")
 
 	except prawcore.exceptions.ServerError as error:
 		print(f'skipping submission reply due to PRAW error: {type(error)}: {error}')
