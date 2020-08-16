@@ -400,7 +400,7 @@ def new_comment_stream(mp_lock, reddit, request_headers, iteration=1):
 						for search_result in search_list:
 							# only return guide submissions
 							if search_result['link_flair_text'] == 'GUIDE':
-								response += f"""[{search_result['title']}]({search_result['full_link']}) from u/{search_result['author']}"""
+								response += f"""- [{search_result['title']}]({search_result['full_link']}) from u/{search_result['author']}"""
 								num_results += 1
 							if num_results >= 5:
 								break
