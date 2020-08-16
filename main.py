@@ -452,7 +452,9 @@ def comment_reply_stream(mp_lock, reddit, iteration=1):
 						response = response.replace('%NUM%', str(num_results))
 
 					# reply to the command
-					comment.reply(response)
+					reply = comment.reply(response)
+					# distinguish the comment reply
+					reply.mod.distinguish(how='yes')
 					print(f"""guide search from u/{comment.author.name}, {num_results} results: {' '.join(args)}""")
 
 	except prawcore.exceptions.ServerError as error:
