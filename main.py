@@ -372,19 +372,57 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 
 ##### OTHER REDDIT FUNCTIONS #####
 
-def new_comment_stream(mp_lock, reddit, request_headers, iteration=1):
-	print('new comment stream started')
+def submission_reply_stream(mp_lock, reddit, iteration=1):
+	print('submission reply stream started')
 
 	# connect to the database
-	connect.db_connect('new comment stream')
+	connect.db_connect('submission reply stream')
 
 	subreddit = reddit.subreddit(config.HOME_SUBREDDIT)
 
 	try:
-		# iterate through all new comments indefinitely
-		for comment in subreddit.stream.comments(skip_existing=True):
+		# iterate through all new submissions indefinitely
+		for submission in subreddit.stream.submissions(skip_existing=True):
+			# only comment on submissions with specific flair
+			if hasattr(submission, 'link_flair_text'):
+				if submission.link_flair_text == 'GUIDE':
+					# submit a comment reply
+					reply = submission.reply(f"""Thank you for your guide submission! We've added it to our guide submission index. You can search for other guides by replying to this comment with `{config.R_CMD_PREFIX}guide <keyword> <timeframe>`, for example `{config.R_CMD_PREFIX}guide mech 30` to see all mech guides from the past month.\n\n^^(What do you think of this new feature? [Let the mod team know!](www.reddit.com/message/compose?to=/r/CompetitiveTFT&subject=My%20thoughts%20on%20the%20new%20sub%20bot))""")
+					# distinguish and sticky the comment reply
+					reply.mod.distinguish(how='yes', sticky=True)
+
+	except prawcore.exceptions.ServerError as error:
+		print(f'skipping submission reply due to PRAW error: {type(error)}: {error}')
+	except prawcore.exceptions.RequestException as error:
+		print(f'skipping submission reply due to PRAW error: {type(error)}: {error}')
+	except prawcore.exceptions.ResponseException as error:
+		print(f'skipping submission reply due to PRAW error: {type(error)}: {error}')
+	except Exception as error:
+		print(f'skipping submission reply due to unknown error: {type(error)}: {error}')
+
+	iteration += 1
+	if iteration <= config.OVERFLOW:
+		submission_reply_stream(mp_lock, reddit, iteration)
+	else:
+		print(f'killing submission reply stream, >{config.OVERFLOW} skipped comments')
+
+def comment_reply_stream(mp_lock, reddit, iteration=1):
+	print('comment reply stream started')
+
+	# connect to the database
+	connect.db_connect('comment reply stream')
+
+	subreddit = reddit.subreddit(config.HOME_SUBREDDIT)
+
+	try:
+		# iterate through all comment replies indefinitely
+		reply_function = reddit.inbox.comment_replies
+		for comment in praw.models.util.stream_generator(reply_function, skip_existing=True):
+			# mark all new comments as read
+			reddit.inbox.mark_read([comment])
+
 			if comment.body.startswith(config.R_CMD_PREFIX):
-				# parse commands from new comments
+				# parse commands from comment replies
 				comment_body = comment.body.lstrip(config.R_CMD_PREFIX)
 				command = comment_body.split()[0].lower()
 				args = comment_body.split()[1:]
@@ -418,19 +456,19 @@ def new_comment_stream(mp_lock, reddit, request_headers, iteration=1):
 					print(f"""guide search from u/{comment.author.name}, {num_results} results: {' '.join(args)}""")
 
 	except prawcore.exceptions.ServerError as error:
-		print(f'skipping new comment due to PRAW error: {type(error)}: {error}')
+		print(f'skipping comment reply due to PRAW error: {type(error)}: {error}')
 	except prawcore.exceptions.RequestException as error:
-		print(f'skipping new comment due to PRAW error: {type(error)}: {error}')
+		print(f'skipping comment reply due to PRAW error: {type(error)}: {error}')
 	except prawcore.exceptions.ResponseException as error:
-		print(f'skipping new comment due to PRAW error: {type(error)}: {error}')
+		print(f'skipping comment reply due to PRAW error: {type(error)}: {error}')
 	except Exception as error:
-		print(f'skipping new comment due to unknown error: {type(error)}: {error}')
+		print(f'skipping comment reply due to unknown error: {type(error)}: {error}')
 
 	iteration += 1
 	if iteration <= config.OVERFLOW:
-		new_comment_stream(mp_lock, reddit, request_headers, iteration)
+		comment_reply_stream(mp_lock, reddit, iteration)
 	else:
-		print(f'killing new comment stream, >{config.OVERFLOW} skipped comments')
+		print(f'killing comment reply stream, >{config.OVERFLOW} skipped comments')
 
 
 ##### CODE TO RUN AT LAUNCH #####
@@ -449,9 +487,9 @@ def main():
 	inbox_reply_stream_process = Process(target=inbox_reply_stream, args=(mp_lock, reddit, request_headers,))
 	inbox_reply_stream_process.start()
 
-	# start the new comment stream
-	new_comment_stream_process = Process(target=new_comment_stream, args=(mp_lock, reddit, request_headers,))
-	new_comment_stream_process.start()
+	# start the comment reply stream
+	comment_reply_stream_process = Process(target=comment_reply_stream, args=(mp_lock, reddit,))
+	comment_reply_stream_process.start()
 
 	# start the ranked flair updater
 	ranked_flair_updater_process = Process(target=ranked_flair_updater, args=(mp_lock, reddit, request_headers,))
