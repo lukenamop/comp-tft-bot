@@ -43,7 +43,7 @@ def inbox_reply_stream(mp_lock, reddit, request_headers, iteration=1):
 	subreddit = reddit.subreddit(config.HOME_SUBREDDIT)
 	try:
 		messages = reddit.inbox.messages
-		# iterate through all mentions, indefinitely
+		# iterate through all mentions indefinitely
 		for message in praw.models.util.stream_generator(messages, skip_existing=True):
 			# make sure the message is actually new
 			check_message = True
@@ -263,12 +263,12 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 		print('auto-updater flair decay lockout is active')
 
 	try:
-		# fetch all redditors from the database
+		# fetch all flaired redditors from the database
 		query = 'SELECT reddit_username, riot_region, riot_summoner_name, riot_summoner_id, riot_verified_rank, custom_flair FROM flaired_redditors WHERE riot_verified = True'
 		execute_sql(query)
 		results = connect.db_crsr.fetchall()
-		# iterate through all redditors
 		redditors_to_update = len(results)
+		# iterate through all flaired redditors
 		for redditor in results:
 			redditors_to_update -= 1
 			fail_message = None
@@ -370,6 +370,42 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 		print(f'killing ranked flair updater, >{config.OVERFLOW} skipped auto-update')
 
 
+##### OTHER REDDIT FUNCTIONS #####
+
+def new_comment_stream(mp_lock, reddit, request_headers, iteration=1):
+	print('new comment stream started')
+
+	# connect to the database
+	connect.db_connect('new comment stream')
+
+	subreddit = reddit.subreddit(config.HOME_SUBREDDIT)
+
+	try:
+		# iterate through all new comments indefinitely
+		for comment in subreddit.stream.comments(skip_existing=True):
+			if comment.body.startswith(config.R_CMD_PREFIX):
+				# parse commands from new comments
+				comment_body = comment.body.lstrip(config.R_CMD_PREFIX)
+				command = comment_body.split()[0].lower
+				args = comment_body.split()[1:]
+				print(f'command: {command}\nargs: {args}')
+
+	except prawcore.exceptions.ServerError as error:
+		print(f'skipping new comment due to PRAW error: {type(error)}: {error}')
+	except prawcore.exceptions.RequestException as error:
+		print(f'skipping new comment due to PRAW error: {type(error)}: {error}')
+	except prawcore.exceptions.ResponseException as error:
+		print(f'skipping new comment due to PRAW error: {type(error)}: {error}')
+	except Exception as error:
+		print(f'skipping new comment due to unknown error: {type(error)}: {error}')
+
+	iteration += 1
+	if iteration <= config.OVERFLOW:
+		new_comment_stream(mp_lock, reddit, request_headers, iteration)
+	else:
+		print(f'killing new comment stream, >{config.OVERFLOW} skipped comments')
+
+
 ##### CODE TO RUN AT LAUNCH #####
 
 def main():
@@ -385,6 +421,10 @@ def main():
 	# start the inbox reply stream
 	inbox_reply_stream_process = Process(target=inbox_reply_stream, args=(mp_lock, reddit, request_headers,))
 	inbox_reply_stream_process.start()
+
+	# start the new comment stream
+	new_comment_stream_process = Process(target=new_comment_stream, args=(mp_lock, reddit, request_headers,))
+	new_comment_stream_process.start()
 
 	# start the ranked flair updater
 	ranked_flair_updater_process = Process(target=ranked_flair_updater, args=(mp_lock, reddit, request_headers,))
