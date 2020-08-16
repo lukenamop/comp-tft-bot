@@ -400,7 +400,7 @@ def submission_reply_stream(mp_lock, reddit, iteration=1):
 
 			if respond_to_submission:
 				# submit a comment reply
-				reply = submission.reply(f"""Thank you for your guide submission! We've added it to our guide submission index. You can search for other guides by replying to this comment with `{config.R_CMD_PREFIX}guide <keyword> <timeframe>`, for example `{config.R_CMD_PREFIX}guide mech 30` to see all mech guides from the past month.\n\n^^What ^^do ^^you ^^think ^^of ^^this ^^new ^^feature? [^^Let ^^the ^^mod ^^team ^^know!](www.reddit.com/message/compose?to=/r/CompetitiveTFT&subject=My%20thoughts%20on%20the%20new%20sub%20bot))""")
+				reply = submission.reply(f"""Thank you for your guide submission! We've added it to our guide submission index. You can search for other guides by replying to this comment with `{config.R_CMD_PREFIX}guide <keyword> <timeframe>`, for example `{config.R_CMD_PREFIX}guide mech 30` to see all mech guides from the past month.\n\n^^What&nbsp;do&nbsp;you&nbsp;think&nbsp;of&nbsp;this&nbsp;new&nbsp;feature? ^^[Let&nbsp;the&nbsp;mod&nbsp;team&nbsp;know!](www.reddit.com/message/compose?to=/r/CompetitiveTFT&subject=My%20thoughts%20on%20the%20new%20sub%20bot)""")
 				# distinguish and sticky the comment reply
 				reply.mod.distinguish(how='yes', sticky=True)
 				print(f"""guide submission from u/{submission.author.name}""")
