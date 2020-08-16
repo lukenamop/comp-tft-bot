@@ -396,13 +396,14 @@ def new_comment_stream(mp_lock, reddit, request_headers, iteration=1):
 					# start building a comment response
 					response = f'Top %NUM% guides from the past {config.PUSHSH_TIMEFRAME}:\n'
 					num_results = 0
-					for search_result in search_list:
-						# only return guide submissions
-						if search_result['link_flair_text'] == 'GUIDE':
-							response += f"""[{search_result['title']}]({search_result['full_link']}) from u/{search_result['author']}"""
-							num_results += 1
-						if num_results >= 5:
-							break
+					if len(search_list) > 0:
+						for search_result in search_list:
+							# only return guide submissions
+							if search_result['link_flair_text'] == 'GUIDE':
+								response += f"""[{search_result['title']}]({search_result['full_link']}) from u/{search_result['author']}"""
+								num_results += 1
+							if num_results >= 5:
+								break
 
 					# if no results were found, send a specific reply
 					if num_results == 0:
