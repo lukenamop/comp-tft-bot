@@ -265,7 +265,7 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 
 	try:
 		# fetch all flaired redditors from the database
-		query = 'SELECT reddit_username, riot_region, riot_summoner_name, riot_summoner_id, riot_verified_rank, custom_flair FROM flaired_redditors WHERE riot_verified = True'
+		query = 'SELECT reddit_username, riot_region, riot_summoner_name, riot_summoner_id, riot_verified_rank, custom_flair FROM flaired_redditors WHERE riot_verified = True ORDER BY reddit_username ASC'
 		execute_sql(query)
 		results = connect.db_crsr.fetchall()
 		redditors_to_update = len(results)
@@ -382,7 +382,7 @@ def submission_reply_stream(mp_lock, reddit, iteration=1):
 	subreddit = reddit.subreddit(config.HOME_SUBREDDIT)
 
 	####
-	search_list = requests.get(f"""http://api.pushshift.io/reddit/search/submission/?subreddit={config.PUSHSH_SUB}&after=60d&sort_type={config.PUSHSH_SORT}&sort=desc&fields=author,full_link,id,link_flair_text,num_comments,score,selftext,title,url&size=300""").json()['data']
+	search_list = requests.get(f"""http://api.pushshift.io/reddit/search/submission/?subreddit={config.PUSHSH_SUB}&after=30d&sort_type={config.PUSHSH_SORT}&sort=desc&fields=author,full_link,id,link_flair_text,num_comments,score,selftext,title,url&size=300""").json()['data']
 	guide_submissions = {}
 	for search in search_list:
 		if 'link_flair_text' in search:
@@ -408,7 +408,7 @@ def submission_reply_stream(mp_lock, reddit, iteration=1):
 		i += 1
 		if i >= 50:
 			break
-		print(f'feature_name - ')
+		print(f'{feature_name} - ')
 	####
 
 	try:
