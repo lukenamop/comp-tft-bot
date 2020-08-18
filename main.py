@@ -387,7 +387,7 @@ def submission_reply_stream(mp_lock, reddit, iteration=1):
 	while True:
 		try:
 			search_list += requests.get(f"""http://api.pushshift.io/reddit/search/submission/?subreddit={config.PUSHSH_SUB}&before={created_utc}&fields=author,full_link,id,link_flair_text,num_comments,score,selftext,title,url,created_utc&size=1000""").json()['data']
-		except:
+		except KeyError:
 			break
 		time.sleep(1)
 		created_utc = search_list[-1]['created_utc']
