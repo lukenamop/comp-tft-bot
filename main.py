@@ -382,7 +382,15 @@ def submission_reply_stream(mp_lock, reddit, iteration=1):
 	subreddit = reddit.subreddit(config.HOME_SUBREDDIT)
 
 	####
-	search_list = requests.get(f"""http://api.pushshift.io/reddit/search/submission/?subreddit={config.PUSHSH_SUB}&after=60d&sort_type={config.PUSHSH_SORT}&sort=desc&fields=author,full_link,id,link_flair_text,num_comments,score,selftext,title,url&size=2000""").json()['data']
+	search_list = []
+	created_utc = time.time()
+	while True:
+		try:
+			search_list += requests.get(f"""http://api.pushshift.io/reddit/search/submission/?subreddit={config.PUSHSH_SUB}&before={created_utc}&sort_type={config.PUSHSH_SORT}&sort=desc&fields=author,full_link,id,link_flair_text,num_comments,score,selftext,title,url,created_utc&size=1000""").json()['data']
+		except:
+			break
+		time.sleep(1)
+		created_utc = search_list[-1]['created_utc']
 	guide_submissions = {}
 	print(f'total submissions: {len(search_list)}')
 	for search in search_list:
