@@ -1,4 +1,5 @@
 praw
 prawcore
 psycopg2
+scikit-learn
 git+https://github.com/takluyver/Unidecode.git

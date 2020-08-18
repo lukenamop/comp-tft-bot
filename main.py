@@ -11,6 +11,7 @@ import string
 import time
 from multiprocessing import Process, Lock
 from unidecode import unidecode
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 # import additional files
 import config
@@ -380,6 +381,28 @@ def submission_reply_stream(mp_lock, reddit, iteration=1):
 
 	subreddit = reddit.subreddit(config.HOME_SUBREDDIT)
 
+	####
+	search_list = requests.get(f"""http://api.pushshift.io/reddit/search/submission/?subreddit={config.PUSHSH_SUB}&after={config.PUSHSH_TIMEFRAME}&sort_type={config.PUSHSH_SORT}&sort=desc&fields=author,full_link,id,link_flair_text,num_comments,score,selftext,title,url&size=100""").json()['data']
+	guide_submissions = {}
+	for search in search_list:
+		if link_flair_text == 'GUIDE':
+			guide_submissions[search['title']] = search['selftext']
+
+	print(f'guide submissions: {len(guide_submissions.keys())}')
+
+	vectorizer = TfidfVectorizer()
+
+	vectors = vectorizer.fit_transform(list(guide_submissions.values()))
+
+	feature_names = vectorizer.get_feature_names()
+
+	dense = vectors.todense()
+
+	denselist = dense.tolist()
+
+	print('done vectorizing guide submissions')
+	####
+
 	try:
 		# iterate through all new submissions indefinitely
 		for submission in subreddit.stream.submissions(skip_existing=True):
@@ -400,7 +423,7 @@ def submission_reply_stream(mp_lock, reddit, iteration=1):
 
 			if respond_to_submission:
 				# submit a comment reply
-				reply = submission.reply(f"""Thank you for your guide submission! We've added it to our guide submission index. You can search for other guides by replying to this comment with `{config.R_CMD_PREFIX}guide <keyword> <timeframe>`, for example `{config.R_CMD_PREFIX}guide mech 30` to see all mech guides from the past month.\n\n^^What&nbsp;do&nbsp;you&nbsp;think&nbsp;of&nbsp;this&nbsp;new&nbsp;feature? ^^[Let&nbsp;the&nbsp;mod&nbsp;team&nbsp;know!](https://reddit.com/message/compose?to=/r/CompetitiveTFT&subject=My%20thoughts%20on%20the%20new%20sub%20bot)""")
+				reply = submission.reply(f"""Thank you for your guide submission! We've added it to our guide submission index. You can search for other guides by replying to this comment with `{config.R_CMD_PREFIX}guide <timeframe> <keyword>` (for example, use `{config.R_CMD_PREFIX}guide 30 mech` to see all mech guides from the past 30 days).\n\n^^What&nbsp;do&nbsp;you&nbsp;think&nbsp;of&nbsp;this&nbsp;new&nbsp;feature? ^^[Let&nbsp;the&nbsp;mod&nbsp;team&nbsp;know!](https://reddit.com/message/compose?to=/r/CompetitiveTFT&subject=My%20thoughts%20on%20the%20new%20sub%20bot)""")
 				# distinguish and sticky the comment reply
 				reply.mod.distinguish(how='yes', sticky=True)
 				print(f"""guide submission from u/{submission.author.name}""")
