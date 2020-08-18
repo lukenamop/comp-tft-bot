@@ -382,7 +382,7 @@ def submission_reply_stream(mp_lock, reddit, iteration=1):
 	subreddit = reddit.subreddit(config.HOME_SUBREDDIT)
 
 	####
-	search_list = requests.get(f"""http://api.pushshift.io/reddit/search/submission/?subreddit={config.PUSHSH_SUB}&after={config.PUSHSH_TIMEFRAME}&sort_type={config.PUSHSH_SORT}&sort=desc&fields=author,full_link,id,link_flair_text,num_comments,score,selftext,title,url&size=100""").json()['data']
+	search_list = requests.get(f"""http://api.pushshift.io/reddit/search/submission/?subreddit={config.PUSHSH_SUB}&after=100d&sort_type={config.PUSHSH_SORT}&sort=desc&fields=author,full_link,id,link_flair_text,num_comments,score,selftext,title,url&size=300""").json()['data']
 	guide_submissions = {}
 	for search in search_list:
 		if 'link_flair_text' in search:
