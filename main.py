@@ -391,7 +391,7 @@ def index_guides(reddit):
 		for guide_submission in connect.db_crsr.fetchall():
 			submission = reddit.submission(id=guide_submission[1])
 			query = 'UPDATE guide_submissions SET title = %s, author = %s WHERE db_id = %s'
-			q_args = [submission.title, submission.author, guide_submission[0]]
+			q_args = [submission.title, submission.author.name, guide_submission[0]]
 			execute_sql(query, q_args)
 	connect.db_conn.commit()
 	print('done indexing')
@@ -429,15 +429,15 @@ def submission_reply_stream(mp_lock, reddit, iteration=1):
 				reply.mod.distinguish(how='yes', sticky=True)
 				print(f"""guide submission from u/{submission.author.name}""")
 
-				# index guide submission in database
-				if submission.selftext not in [None, '']:
-					query = 'SELECT db_id FROM guide_submissions WHERE reddit_id = %s'
-					q_args = [submission.id]
-					execute_sql(query, q_args)
-					if connect.db_crsr.fetchone() is None:
-						query = 'INSERT INTO guide_submissions (reddit_id, title, author, full_selftext, created_utc) VALUES (%s, %s, %s, %s, %s)'
-						q_args = [submission.id, submission.title, submission.author.name, submission.selftext, submission.created_utc]
-						execute_sql(query, q_args)
+				# # index guide submission in database
+				# if submission.selftext not in [None, '']:
+				# 	query = 'SELECT db_id FROM guide_submissions WHERE reddit_id = %s'
+				# 	q_args = [submission.id]
+				# 	execute_sql(query, q_args)
+				# 	if connect.db_crsr.fetchone() is None:
+				# 		query = 'INSERT INTO guide_submissions (reddit_id, title, author, full_selftext, created_utc) VALUES (%s, %s, %s, %s, %s)'
+				# 		q_args = [submission.id, submission.title, submission.author.name, submission.selftext, submission.created_utc]
+				# 		execute_sql(query, q_args)
 
 	except prawcore.exceptions.ServerError as error:
 		print(f'skipping submission reply due to PRAW error: {type(error)}: {error}')
