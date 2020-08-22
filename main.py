@@ -559,7 +559,7 @@ def comment_reply_stream(mp_lock, reddit, iteration=1):
 
 					if run_search:
 						# search the database index
-						query = 'SELECT keyword_1, keyword_2, keyword_3, keyword_4, keyword_5, title, author, id FROM guide_submissions WHERE created_utc > %s ORDER BY db_id DESC'
+						query = 'SELECT keyword_1, keyword_2, keyword_3, keyword_4, keyword_5, title, author, reddit_id FROM guide_submissions WHERE created_utc > %s ORDER BY db_id DESC'
 						q_args = [search_timestamp]
 						execute_sql(query, q_args)
 						results = connect.db_crsr.fetchall()
@@ -570,7 +570,7 @@ def comment_reply_stream(mp_lock, reddit, iteration=1):
 							for guide_submission in results:
 								# if the keywords match, add a result to the list
 								if guide_submission[keyword_num - 1] == search_keyword:
-									results.append({'title': guide_submission[5], 'author': guide_submission[6], 'id': guide_submission[7]})
+									results.append({'title': guide_submission[5], 'author': guide_submission[6], 'reddit_id': guide_submission[7]})
 									# stop when the limit of relevant guides has been found
 									if len(search_results) >= config.GUIDE_LIMIT:
 										break
@@ -584,7 +584,7 @@ def comment_reply_stream(mp_lock, reddit, iteration=1):
 							# list all search results
 							response = f"""Top {len(search_results)} `{search_keyword}` guides from the past {search_days} days:\n"""
 							for search_result in search_results:
-								response += f"""\n- [{search_result['title']}](https://redd.it/{search_result['id']}/) from u/{search_result['author']}"""
+								response += f"""\n- [{search_result['title']}](https://redd.it/{search_result['reddit_id']}/) from u/{search_result['author']}"""
 						response_print = f"""guide search from u/{comment.author.name}, {len(search_results)} results: {' '.join(args)}"""
 
 					# reply to the command
