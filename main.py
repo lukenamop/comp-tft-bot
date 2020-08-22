@@ -373,6 +373,28 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 
 ##### OTHER REDDIT FUNCTIONS #####
 
+def index_guides():
+	print('index guides started')
+
+	# connect to the database
+	connect.db_connect('index guides')
+
+
+	with open('resources/ctft-final.txt') as ctft_file:
+		guide_submissions = json.load(ctft_file)
+
+	print(f'starting to index {len(guide_submissions)} guide submissions...')
+	for guide_submission in guide_submissions:
+		query = 'SELECT db_id FROM guide_submissions WHERE reddit_id = %s'
+		q_args = [guide_submission['id']]
+		execute_sql(query, q_args)
+		if connect.db_crsr.fetchone() is None:
+			query = 'INSERT INTO guide_submissions (reddit_id, title, author, full_selftext, created_utc) VALUES (%s, %s, %s, %s, %s)'
+			q_args = [guide_submission['id'], guide_submission['title'], guide_submission['author'], guide_submission['selftext'], guide_submission['created_utc']]
+			execute_sql(query, q_args)
+	connect.db_conn.commit()
+	print('done indexing')
+
 def submission_reply_stream(mp_lock, reddit, iteration=1):
 	print('submission reply stream started')
 
