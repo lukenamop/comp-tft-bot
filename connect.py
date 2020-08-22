@@ -18,30 +18,20 @@ def db_connect(connection_name):
 	return True
 
 def db_stats():
-	db_crsr.execute("""CREATE TABLE guide_submissions (
-		db_id SERIAL PRIMARY KEY,
-		reddit_id VARCHAR(7) NOT NULL,
-		title VARCHAR(300) NOT NULL,
-		author VARCHAR(30) NOT NULL,
-		full_selftext VARCHAR(40000) NOT NULL,
-		created_utc NUMERIC(10) NOT NULL,
-		keyword_1 VARCHAR(50) DEFAULT NULL,
-		keyword_2 VARCHAR(50) DEFAULT NULL,
-		keyword_3 VARCHAR(50) DEFAULT NULL,
-		keyword_4 VARCHAR(50) DEFAULT NULL,
-		keyword_5 VARCHAR(50) DEFAULT NULL)""")
-	db_conn.commit()
-
 	db_crsr.execute("""SELECT COUNT(*) FROM flaired_redditors WHERE riot_verified = False""")
 	unverified_redditors = db_crsr.fetchone()[0]
 
 	db_crsr.execute("""SELECT COUNT(*) FROM flaired_redditors WHERE riot_verified = True""")
 	verified_redditors = db_crsr.fetchone()[0]
 
+	db_crsr.execute("""SELECT COUNT(*) FROM guide_submissions""")
+	guide_submissions = db_crsr.fetchone()[0]
+
 	# print connection properties
 	print(f'postgres connection info: {db_conn.get_dsn_parameters()}'
 		+ f'\nunverified redditors: {unverified_redditors}'
-		+ f'\nverified redditors: {verified_redditors}')
+		+ f'\nverified redditors: {verified_redditors}'
+		+ f'\nguide submissions: {guide_submissions}')
 
 # TABLE flaired_redditors
 # db_id SERIAL PRIMARY KEY
