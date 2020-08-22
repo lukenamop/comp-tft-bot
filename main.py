@@ -381,46 +381,6 @@ def submission_reply_stream(mp_lock, reddit, iteration=1):
 
 	subreddit = reddit.subreddit(config.HOME_SUBREDDIT)
 
-	####
-	search_list = []
-	created_utc = int(time.time())
-	while True:
-		try:
-			search_list += requests.get(f"""http://api.pushshift.io/reddit/search/submission/?subreddit={config.PUSHSH_SUB}&before={created_utc}&fields=author,full_link,id,link_flair_text,num_comments,score,selftext,title,url,created_utc&size=1000""").json()['data']
-			print('fetched 100 results from pushshift, fetching 100 more...')
-		except:
-			break
-		time.sleep(1)
-		created_utc = search_list[-1]['created_utc']
-	guide_submissions = {}
-	print(f'total submissions: {len(search_list)}')
-	for search in search_list:
-		if 'link_flair_text' in search:
-			if search['link_flair_text'] == 'GUIDE':
-				guide_submissions[search['title']] = search['selftext']
-
-	print(f'guide submissions: {len(guide_submissions.keys())}')
-
-	vectorizer = TfidfVectorizer()
-
-	vectors = vectorizer.fit_transform(list(guide_submissions.values()))
-
-	feature_names = vectorizer.get_feature_names()
-
-	dense = vectors.todense()
-
-	denselist = dense.tolist()
-
-	print('done vectorizing guide submissions')
-
-	i = 0
-	for feature_name in feature_names:
-		i += 1
-		if i >= 50:
-			break
-		print(f'{feature_name} - ')
-	####
-
 	try:
 		# iterate through all new submissions indefinitely
 		for submission in subreddit.stream.submissions(skip_existing=True):

@@ -18,6 +18,20 @@ def db_connect(connection_name):
 	return True
 
 def db_stats():
+	db_crsr.execute("""CREATE TABLE guide_submissions (
+		db_id SERIAL PRIMARY KEY,
+		reddit_id VARCHAR(7) NOT NULL,
+		title VARCHAR(300) NOT NULL,
+		author VARCHAR(30) NOT NULL,
+		full_selftext VARCHAR(40000) NOT NULL,
+		created_utc NUMERIC(10) NOT NULL,
+		keyword_1 VARCHAR(50) DEFAULT NULL,
+		keyword_2 VARCHAR(50) DEFAULT NULL,
+		keyword_3 VARCHAR(50) DEFAULT NULL,
+		keyword_4 VARCHAR(50) DEFAULT NULL,
+		keyword_5 VARCHAR(50) DEFAULT NULL)""")
+	db_conn.commit()
+
 	db_crsr.execute("""SELECT COUNT(*) FROM flaired_redditors WHERE riot_verified = False""")
 	unverified_redditors = db_crsr.fetchone()[0]
 
@@ -39,3 +53,16 @@ def db_stats():
 # riot_verified BOOLEAN DEFAULT False
 # riot_verified_rank VARCHAR(40) DEFAULT NULL
 # custom_flair VARCHAR(60) DEFAULT NULL
+
+# TABLE guide_submissions
+# db_id SERIAL PRIMARY KEY
+# reddit_id VARCHAR(7) NOT NULL
+# title VARCHAR(300) NOT NULL
+# author VARCHAR(30) NOT NULL
+# full_selftext VARCHAR(40000) NOT NULL
+# created_utc NUMERIC(10) NOT NULL
+# keyword_1 VARCHAR(50) DEFAULT NULL
+# keyword_2 VARCHAR(50) DEFAULT NULL
+# keyword_3 VARCHAR(50) DEFAULT NULL
+# keyword_4 VARCHAR(50) DEFAULT NULL
+# keyword_5 VARCHAR(50) DEFAULT NULL
