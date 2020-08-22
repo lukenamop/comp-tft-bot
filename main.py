@@ -380,16 +380,23 @@ def index_guides(reddit):
 	# connect to the database
 	connect.db_connect('index guides')
 
-
-	with open('resources/ctft-parsed.txt') as ctft_file:
-		guide_submissions = json.load(ctft_file)
-
-	print(f'starting to index {len(guide_submissions)} guide submissions...')
-	for guide_submission in guide_submissions:
-		query = 'SELECT db_id, reddit_id FROM guide_submissions'
-		execute_sql(query)
-		for guide_submission in connect.db_crsr.fetchall():
-			submission = reddit.submission(id=guide_submission[1])
+	query = 'SELECT db_id, reddit_id FROM guide_submissions'
+	execute_sql(query)
+	results = connect.db_crsr.fetchall()
+	print(f'indexing {len(results)} guides...')
+	for guide_submission in results:
+		submission = reddit.submission(id=guide_submission[1])
+		remove_from_db = False
+		if submission is None:
+			remove_from_db = True
+		else:
+			if submission.author is None:
+				remove_from_db = True
+		if remove_from_db:
+			query = 'DELETE FROM guide_submissions WHERE db_id = %s'
+			q_args = [guide_submission[0]]
+			execute_sql(query, q_args)
+		else:
 			query = 'UPDATE guide_submissions SET title = %s, author = %s WHERE db_id = %s'
 			q_args = [submission.title, submission.author.name, guide_submission[0]]
 			execute_sql(query, q_args)
