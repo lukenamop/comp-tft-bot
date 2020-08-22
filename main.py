@@ -2,6 +2,7 @@
 
 # import libraries
 import datetime
+import json
 import math
 import praw
 import prawcore
@@ -10,8 +11,8 @@ import requests
 import string
 import time
 from multiprocessing import Process, Lock
-from unidecode import unidecode
 from sklearn.feature_extraction.text import TfidfVectorizer
+from unidecode import unidecode
 
 # import additional files
 import config
