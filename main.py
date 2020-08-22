@@ -563,7 +563,7 @@ def comment_reply_stream(mp_lock, reddit, iteration=1):
 						q_args = [search_timestamp]
 						execute_sql(query, q_args)
 						results = connect.db_crsr.fetchall()
-						if results is not None:
+						if results not in [None, []]:
 							# iterate through guide submissions to find relevant guides
 							search_results = []
 							keyword_num = 1
