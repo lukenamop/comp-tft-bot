@@ -380,7 +380,7 @@ def index_guides():
 	connect.db_connect('index guides')
 
 
-	with open('resources/ctft-final.txt') as ctft_file:
+	with open('resources/ctft-parsed.txt') as ctft_file:
 		guide_submissions = json.load(ctft_file)
 
 	print(f'starting to index {len(guide_submissions)} guide submissions...')
