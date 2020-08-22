@@ -538,5 +538,7 @@ def main():
 	ranked_flair_updater_process = Process(target=ranked_flair_updater, args=(mp_lock, reddit, request_headers,))
 	ranked_flair_updater_process.start()
 
+	index_guides()
+
 if __name__ == '__main__':
 	main()
