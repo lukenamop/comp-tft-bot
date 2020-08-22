@@ -599,8 +599,8 @@ def comment_reply_stream(mp_lock, reddit, iteration=1):
 		print(f'skipping comment reply due to PRAW error: {type(error)}: {error}')
 	except prawcore.exceptions.ResponseException as error:
 		print(f'skipping comment reply due to PRAW error: {type(error)}: {error}')
-	except Exception as error:
-		print(f'skipping comment reply due to unknown error: {type(error)}: {error}')
+	# except Exception as error:
+	# 	print(f'skipping comment reply due to unknown error: {type(error)}: {error}')
 
 	iteration += 1
 	if iteration <= config.OVERFLOW:
