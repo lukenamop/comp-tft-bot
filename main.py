@@ -569,7 +569,7 @@ def comment_reply_stream(mp_lock, reddit, iteration=1):
 						while keyword_num <= 5:
 							for guide_submission in results:
 								# if the keywords match, add a result to the list
-								if guide_submission[int(keyword_num - 1)] == search_keyword:
+								if guide_submission[f'keyword_{keyword_num}'] == search_keyword:
 									results.append({'title': guide_submission[5], 'author': guide_submission[6], 'reddit_id': guide_submission[7]})
 									# stop when the limit of relevant guides has been found
 									if len(search_results) >= config.GUIDE_LIMIT:
