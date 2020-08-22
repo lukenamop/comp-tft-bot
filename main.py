@@ -374,34 +374,30 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 
 ##### OTHER REDDIT FUNCTIONS #####
 
-def index_guides(reddit):
+def maintain_guide_index(reddit):
 	print('index guides started')
 
 	# connect to the database
-	connect.db_connect('index guides')
+	connect.db_connect('maintain guide index')
 
 	query = 'SELECT db_id, reddit_id FROM guide_submissions'
 	execute_sql(query)
 	results = connect.db_crsr.fetchall()
-	print(f'indexing {len(results)} guides...')
+	print(f're-indexing {len(results)} guides...')
 	for guide_submission in results:
 		submission = reddit.submission(id=guide_submission[1])
 		remove_from_db = False
 		if submission is None:
 			remove_from_db = True
 		else:
-			if submission.author is None:
+			if submission.author is None or submission.selftext in [None, '', '[deleted]', '[removed]']:
 				remove_from_db = True
 		if remove_from_db:
 			query = 'DELETE FROM guide_submissions WHERE db_id = %s'
 			q_args = [guide_submission[0]]
 			execute_sql(query, q_args)
-		else:
-			query = 'UPDATE guide_submissions SET title = %s, author = %s WHERE db_id = %s'
-			q_args = [submission.title, submission.author.name, guide_submission[0]]
-			execute_sql(query, q_args)
 	connect.db_conn.commit()
-	print('done indexing')
+	print('done re-indexing')
 
 def submission_reply_stream(mp_lock, reddit, iteration=1):
 	print('submission reply stream started')
