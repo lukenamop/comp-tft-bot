@@ -88,8 +88,4 @@ START_VERIF_MSG_LINK = f'https://www.reddit.com/message/compose/?to=CompetitiveT
 FINISH_VERIF_MSG_LINK = 'https://www.reddit.com/message/compose/?to=CompetitiveTFTBot&subject=r%2FCompetitiveTFT%20Ranked%20Flair%20Verification%20-%20Part%202&message=Click%20the%20%22send%22%20button%20to%20complete%20your%20verification%21'
 
 # pushshift guide search config
-PUSHSH_TIMEFRAME = '30d'
-PUSHSH_SORT = 'num_comments'
-PUSHSH_SIZE = '20'
-PUSHSH_SUB = 'CompetitiveTFT'
-GUIDE_LIMIT = 5
+GUIDE_LIMIT = 10

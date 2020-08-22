@@ -450,8 +450,6 @@ def maintain_guide_index(reddit):
 		keyword_3 = feature_names[vector_3['index']] if vector_3['num'] != 0 else None
 		keyword_4 = feature_names[vector_4['index']] if vector_4['num'] != 0 else None
 		keyword_5 = feature_names[vector_5['index']] if vector_5['num'] != 0 else None
-		if g_i < 10:
-			print(f'k1: {keyword_1}, k2: {keyword_2}, k3: {keyword_3}, k4: {keyword_4}, k5: {keyword_5}')
 
 		# update the database with the most relevant keywords
 		query = 'UPDATE guide_submissions SET keyword_1 = %s, keyword_2 = %s, keyword_3 = %s, keyword_4 = %s, keyword_5 = %s WHERE db_id = %s'
@@ -475,9 +473,6 @@ def submission_reply_stream(mp_lock, reddit, iteration=1):
 			respond_to_submission = False
 
 			# only comment on submissions with specific flair
-			if hasattr(submission, 'link_flair_id'):
-				print(submission.link_flair_id)
-
 			if hasattr(submission, 'link_flair_text'):
 				print(submission.link_flair_text)
 				if submission.link_flair_text == 'GUIDE':
@@ -487,9 +482,18 @@ def submission_reply_stream(mp_lock, reddit, iteration=1):
 			if submission.created_utc < (time.time() - 60 * 30):
 				respond_to_submission = False
 
+			# only respond to each submission once
+			submission.comment_sort = 'top'
+			submission.comments.replace_more(limit=0)
+			comments_list = submission.comments.list()
+			if len(comments_list) > 0:
+				top_comment = comments_list[0]
+				if top_comment.author.name == 'CompetitiveTFTBot':
+					respond_to_submission = False
+
 			if respond_to_submission:
 				# submit a comment reply
-				reply = submission.reply(f"""Thank you for your guide submission! We've added it to our guide submission index. You can search for other guides by replying to this comment with `{config.R_CMD_PREFIX}guide <timeframe> <keyword>` (for example, use `{config.R_CMD_PREFIX}guide 30 mech` to see all mech guides from the past 30 days).\n\n^^What&nbsp;do&nbsp;you&nbsp;think&nbsp;of&nbsp;this&nbsp;new&nbsp;feature? ^^[Let&nbsp;the&nbsp;mod&nbsp;team&nbsp;know!](https://reddit.com/message/compose?to=/r/CompetitiveTFT&subject=My%20thoughts%20on%20the%20new%20sub%20bot)""")
+				reply = submission.reply(f"""Thank you for your guide submission! We've added it to our guide submission index. You can search for other guides by replying to this comment with `{config.R_CMD_PREFIX}guide <timeframe (days)> <keyword>`\n\n^^What&nbsp;do&nbsp;you&nbsp;think&nbsp;of&nbsp;this&nbsp;new&nbsp;feature? ^^[Let&nbsp;the&nbsp;mod&nbsp;team&nbsp;know!](https://reddit.com/message/compose?to=/r/CompetitiveTFT&subject=My%20thoughts%20on%20the%20new%20sub%20bot)""")
 				# distinguish and sticky the comment reply
 				reply.mod.distinguish(how='yes', sticky=True)
 				print(f"""guide submission from u/{submission.author.name}""")
@@ -503,6 +507,7 @@ def submission_reply_stream(mp_lock, reddit, iteration=1):
 				# 		query = 'INSERT INTO guide_submissions (reddit_id, title, author, full_selftext, created_utc) VALUES (%s, %s, %s, %s, %s)'
 				# 		q_args = [submission.id, submission.title, submission.author.name, submission.selftext, submission.created_utc]
 				# 		execute_sql(query, q_args)
+				# maintain_guide_index(reddit)
 
 	except prawcore.exceptions.ServerError as error:
 		print(f'skipping submission reply due to PRAW error: {type(error)}: {error}')
@@ -541,34 +546,52 @@ def comment_reply_stream(mp_lock, reddit, iteration=1):
 				args = comment_body.split()[1:]
 				# guide search command
 				if command in ['guide', 'search']:
-					# use pushshift to search for the given string
-					search_string = '%20'.join(args)
-					search_list = requests.get(f"""http://api.pushshift.io/reddit/search/submission/?title={search_string}&subreddit={config.PUSHSH_SUB}&after={config.PUSHSH_TIMEFRAME}&sort_type={config.PUSHSH_SORT}&sort=desc&fields=author,full_link,id,link_flair_text,num_comments,score,selftext,title,url&size={config.PUSHSH_SIZE}""").json()['data']
-					# start building a comment response
-					response = f"""Top %NUM% `{' '.join(args)}` guides from the past {config.PUSHSH_TIMEFRAME}:\n"""
-					num_results = 0
-					if len(search_list) > 0:
-						for search_result in search_list:
-							# only return guide submissions
-							if 'link_flair_text' in search_result:
-								if search_result['link_flair_text'] == 'GUIDE':
-									response += f"""\n- [{search_result['title']}]({search_result['full_link']}) from u/{search_result['author']}"""
-									num_results += 1
-							if num_results >= config.GUIDE_LIMIT:
-								break
+					run_search = False
+					try:
+						# pull the search timeframe and keywords from the arg list
+						search_days = int(args[0].rstrip('d'))
+						search_timestamp = int(time.time()) - (60 * 60 * 24 * search_days)
+						search_keyword = args[1]
+						run_search = True
+					except ValueError:
+						response = f"""There was an error executing this command. Be sure to use this format: `{config.R_CMD_PREFIX}guide <timeframe (days)> <keyword>`, for example `{config.R_CMD_PREFIX}guide 30 viktor`"""
+						response_print = f"""attempted guide search from u/{comment.author.name}: {' '.join(args)}"""
 
-					# if no results were found, send a specific reply
-					if num_results == 0:
-						response = f"""Unfortunately no guides were found from the past {config.PUSHSH_TIMEFRAME} when searching for `{' '.join(args)}`. Please try again."""
-					# if results were found, update the reply
-					else:
-						response = response.replace('%NUM%', str(num_results))
+					if run_search:
+						# search the database index
+						query = 'SELECT keyword_1, keyword_2, keyword_3, keyword_4, keyword_5, title, author, id FROM guide_submissions WHERE created_utc > %s ORDER BY db_id DESC'
+						q_args = [search_timestamp]
+						execute_sql(query, q_args)
+						results = connect.db_crsr.fetchall()
+						# iterate through guide submissions to find relevant guides
+						search_results = []
+						keyword_num = 1
+						while keyword_num <= 5:
+							for guide_submission in results:
+								# if the keywords match, add a result to the list
+								if guide_submission[keyword_num - 1] == search_keyword:
+									results.append({'title': guide_submission[5], 'author': guide_submission[6], 'id': guide_submission[7]})
+									# stop when the limit of relevant guides has been found
+									if len(search_results) >= config.GUIDE_LIMIT:
+										break
+							keyword_num += 1
+
+						# build a comment response
+						if len(search_results) == 0:
+							# if no search results were found, inform the user
+							response = f"""Unfortunately no guides were found from the past {search_days} days when searching for `{search_keyword}`. Please try again."""
+						else:
+							# list all search results
+							response = f"""Top {len(search_results)} `{search_keyword}` guides from the past {search_days} days:\n"""
+							for search_result in search_results:
+								response += f"""\n- [{search_result['title']}](https://redd.it/{search_result['id']}/) from u/{search_result['author']}"""
+						response_print = f"""guide search from u/{comment.author.name}, {len(search_results)} results: {' '.join(args)}"""
 
 					# reply to the command
 					reply = comment.reply(response)
 					# distinguish the comment reply
 					reply.mod.distinguish(how='yes')
-					print(f"""guide search from u/{comment.author.name}, {num_results} results: {' '.join(args)}""")
+					print(response_print)
 
 	except prawcore.exceptions.ServerError as error:
 		print(f'skipping comment reply due to PRAW error: {type(error)}: {error}')
