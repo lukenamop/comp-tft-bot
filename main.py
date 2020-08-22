@@ -405,7 +405,7 @@ def maintain_guide_index(reddit):
 	print('done re-indexing')
 
 	# pull all guide submission selftexts from the database
-	query = 'SELECT db_id, selftext FROM guide_submissions'
+	query = 'SELECT db_id, full_selftext FROM guide_submissions'
 	execute_sql(query)
 	results = connect.db_crsr.fetchall()
 	print(f'vectorizing {len(results)} guides...')
