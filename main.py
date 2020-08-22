@@ -374,7 +374,7 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 
 ##### OTHER REDDIT FUNCTIONS #####
 
-def index_guides():
+def index_guides(reddit):
 	print('index guides started')
 
 	# connect to the database
@@ -386,12 +386,12 @@ def index_guides():
 
 	print(f'starting to index {len(guide_submissions)} guide submissions...')
 	for guide_submission in guide_submissions:
-		query = 'SELECT db_id FROM guide_submissions WHERE reddit_id = %s'
-		q_args = [guide_submission['id']]
-		execute_sql(query, q_args)
-		if connect.db_crsr.fetchone() is None:
-			query = 'INSERT INTO guide_submissions (reddit_id, title, author, full_selftext, created_utc) VALUES (%s, %s, %s, %s, %s)'
-			q_args = [guide_submission['id'], guide_submission['title'], guide_submission['author'], guide_submission['selftext'], guide_submission['created_utc']]
+		query = 'SELECT db_id, reddit_id FROM guide_submissions'
+		execute_sql(query)
+		for guide_submission in connect.db_crsr.fetchall():
+			submission = reddit.submission(id=guide_submission[1])
+			query = 'UPDATE guide_submissions SET title = %s, author = %s WHERE db_id = %s'
+			q_args = [submission.title, submission.author, guide_submission[0]]
 			execute_sql(query, q_args)
 	connect.db_conn.commit()
 	print('done indexing')
@@ -428,6 +428,16 @@ def submission_reply_stream(mp_lock, reddit, iteration=1):
 				# distinguish and sticky the comment reply
 				reply.mod.distinguish(how='yes', sticky=True)
 				print(f"""guide submission from u/{submission.author.name}""")
+
+				# index guide submission in database
+				if submission.selftext not in [None, '']:
+					query = 'SELECT db_id FROM guide_submissions WHERE reddit_id = %s'
+					q_args = [submission.id]
+					execute_sql(query, q_args)
+					if connect.db_crsr.fetchone() is None:
+						query = 'INSERT INTO guide_submissions (reddit_id, title, author, full_selftext, created_utc) VALUES (%s, %s, %s, %s, %s)'
+						q_args = [submission.id, submission.title, submission.author.name, submission.selftext, submission.created_utc]
+						execute_sql(query, q_args)
 
 	except prawcore.exceptions.ServerError as error:
 		print(f'skipping submission reply due to PRAW error: {type(error)}: {error}')
@@ -539,7 +549,7 @@ def main():
 	ranked_flair_updater_process = Process(target=ranked_flair_updater, args=(mp_lock, reddit, request_headers,))
 	ranked_flair_updater_process.start()
 
-	index_guides()
+	index_guides(reddit)
 
 if __name__ == '__main__':
 	main()
