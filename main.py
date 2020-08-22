@@ -559,7 +559,7 @@ def comment_reply_stream(mp_lock, reddit, iteration=1):
 
 					if run_search:
 						# search the database index
-						query = 'SELECT keyword_1, keyword_2, keyword_3, keyword_4, keyword_5, title, author, reddit_id FROM guide_submissions WHERE created_utc > %s ORDER BY db_id DESC'
+						query = 'SELECT db_id, keyword_1, keyword_2, keyword_3, keyword_4, keyword_5, title, author, reddit_id FROM guide_submissions WHERE created_utc > %s ORDER BY db_id DESC'
 						q_args = [search_timestamp]
 						execute_sql(query, q_args)
 						results = connect.db_crsr.fetchall()
@@ -569,8 +569,8 @@ def comment_reply_stream(mp_lock, reddit, iteration=1):
 						while keyword_num <= 5:
 							for guide_submission in results:
 								# if the keywords match, add a result to the list
-								if guide_submission[f'keyword_{keyword_num}'] == search_keyword:
-									results.append({'title': guide_submission[5], 'author': guide_submission[6], 'reddit_id': guide_submission[7]})
+								if guide_submission[keyword_num] == search_keyword:
+									results.append({'title': guide_submission[6], 'author': guide_submission[7], 'reddit_id': guide_submission[8]})
 									# stop when the limit of relevant guides has been found
 									if len(search_results) >= config.GUIDE_LIMIT:
 										break
