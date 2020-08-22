@@ -380,12 +380,17 @@ def maintain_guide_index(reddit):
 	# connect to the database
 	connect.db_connect('maintain guide index')
 
+	# pull all guide submission IDs from the database
 	query = 'SELECT db_id, reddit_id FROM guide_submissions'
 	execute_sql(query)
 	results = connect.db_crsr.fetchall()
 	print(f're-indexing {len(results)} guides...')
+	# iterate through guide submissions
 	for guide_submission in results:
+		# fetch the submission object from reddit
 		submission = reddit.submission(id=guide_submission[1])
+
+		# remove any submissions that have been deleted or removed
 		remove_from_db = False
 		if submission is None:
 			remove_from_db = True
@@ -398,6 +403,63 @@ def maintain_guide_index(reddit):
 			execute_sql(query, q_args)
 	connect.db_conn.commit()
 	print('done re-indexing')
+
+	# pull all guide submission selftexts from the database
+	query = 'SELECT db_id, selftext FROM guide_submissions'
+	execute_sql(query)
+	results = connect.db_crsr.fetchall()
+	print(f'vectorizing {len(results)} guides...')
+	# iterate through guide submissions
+	guide_submission_texts = []
+	guide_submission_db_ids = []
+	for guide_submission in results:
+		guide_submission_texts.append(guide_submission[1])
+		guide_submission_db_ids.append(guide_submission[0])
+
+	# create a TFIDF vectorizer with all guide submission texts
+	vectorizer = TfidfVectorizer(stop_words='english')
+	dense_vector_list = vectorizer.fit_transform(guide_submission_texts).todense().tolist()
+	feature_names = vectorizer.get_feature_names()
+
+	# iterate through all guide submissions and find the most relevant vectors
+	g_i = 0
+	for guide_submission_db_id in guide_submission_db_ids:
+		v_i = 0
+		vector_1 = {'num': 0, 'index': 0}
+		vector_2 = {'num': 0, 'index': 0}
+		vector_3 = {'num': 0, 'index': 0}
+		vector_4 = {'num': 0, 'index': 0}
+		vector_5 = {'num': 0, 'index': 0}
+		for vector_num in dense_vector_list[g_i]:
+			if vector_num > vector_1['num']:
+				vector_1 = {'num': vector_num, 'index': v_i}
+			elif vector_num > vector_2['num']:
+				vector_2 = {'num': vector_num, 'index': v_i}
+			elif vector_num > vector_3['num']:
+				vector_3 = {'num': vector_num, 'index': v_i}
+			elif vector_num > vector_4['num']:
+				vector_4 = {'num': vector_num, 'index': v_i}
+			elif vector_num > vector_5['num']:
+				vector_5 = {'num': vector_num, 'index': v_i}
+			v_i += 1
+		g_i += 1
+
+		# find keywords via relevant vectors
+		keyword_1 = feature_names[vector_1['index']] if vector_1['num'] != 0 else None
+		keyword_2 = feature_names[vector_2['index']] if vector_2['num'] != 0 else None
+		keyword_3 = feature_names[vector_3['index']] if vector_3['num'] != 0 else None
+		keyword_4 = feature_names[vector_4['index']] if vector_4['num'] != 0 else None
+		keyword_5 = feature_names[vector_5['index']] if vector_5['num'] != 0 else None
+		if g_i < 10:
+			print(f'k1: {keyword_1}, k2: {keyword_2}, k3: {keyword_3}, k4: {keyword_4}, k5: {keyword_5}')
+
+		# update the database with the most relevant keywords
+		query = 'UPDATE guide_submissions SET keyword_1 = %s, keyword_2 = %s, keyword_3 = %s, keyword_4 = %s, keyword_5 = %s WHERE db_id = %s'
+		q_args = [keyword_1, keyword_2, keyword_3, keyword_4, keyword_5, guide_submission_db_id]
+		execute_sql(query, q_args)
+	connect.db_conn.commit()
+	print('done vectorizing')
+	return
 
 def submission_reply_stream(mp_lock, reddit, iteration=1):
 	print('submission reply stream started')
@@ -552,7 +614,7 @@ def main():
 	ranked_flair_updater_process = Process(target=ranked_flair_updater, args=(mp_lock, reddit, request_headers,))
 	ranked_flair_updater_process.start()
 
-	# start the maintain guide index function
+	# start the function to maintain guide index
 	maintain_guide_index(reddit)
 
 if __name__ == '__main__':
