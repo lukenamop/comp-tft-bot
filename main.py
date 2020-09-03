@@ -492,22 +492,22 @@ def submission_reply_stream(mp_lock, reddit, iteration=1):
 					respond_to_submission = False
 
 			if respond_to_submission:
-				# submit a comment reply
-				reply = submission.reply(f"""Thank you for your guide submission! We've added it to our guide submission index. You can search for other guides by replying to this comment with `{config.R_CMD_PREFIX}guide <timeframe (days)> <keyword>`\n\n^^What&nbsp;do&nbsp;you&nbsp;think&nbsp;of&nbsp;this&nbsp;new&nbsp;feature? ^^[Let&nbsp;the&nbsp;mod&nbsp;team&nbsp;know!](https://reddit.com/message/compose?to=/r/CompetitiveTFT&subject=My%20thoughts%20on%20the%20new%20sub%20bot)""")
-				# distinguish and sticky the comment reply
-				reply.mod.distinguish(how='yes', sticky=True)
-				print(f"""guide submission from u/{submission.author.name}""")
+				# # submit a comment reply
+				# reply = submission.reply(f"""Thank you for your guide submission! We've added it to our guide submission index. You can search for other guides by replying to this comment with `{config.R_CMD_PREFIX}guide <timeframe (days)> <keyword>`\n\n^^What&nbsp;do&nbsp;you&nbsp;think&nbsp;of&nbsp;this&nbsp;new&nbsp;feature? ^^[Let&nbsp;the&nbsp;mod&nbsp;team&nbsp;know!](https://reddit.com/message/compose?to=/r/CompetitiveTFT&subject=My%20thoughts%20on%20the%20new%20sub%20bot)""")
+				# # distinguish and sticky the comment reply
+				# reply.mod.distinguish(how='yes', sticky=True)
+				# print(f"""guide submission from u/{submission.author.name}""")
 
-				# # index guide submission in database
-				# if submission.selftext not in [None, '']:
-				# 	query = 'SELECT db_id FROM guide_submissions WHERE reddit_id = %s'
-				# 	q_args = [submission.id]
-				# 	execute_sql(query, q_args)
-				# 	if connect.db_crsr.fetchone() is None:
-				# 		query = 'INSERT INTO guide_submissions (reddit_id, title, author, full_selftext, created_utc) VALUES (%s, %s, %s, %s, %s)'
-				# 		q_args = [submission.id, submission.title, submission.author.name, submission.selftext, submission.created_utc]
-				# 		execute_sql(query, q_args)
-				# maintain_guide_index(reddit)
+				# index guide submission in database
+				if submission.selftext not in [None, '']:
+					query = 'SELECT db_id FROM guide_submissions WHERE reddit_id = %s'
+					q_args = [submission.id]
+					execute_sql(query, q_args)
+					if connect.db_crsr.fetchone() is None:
+						query = 'INSERT INTO guide_submissions (reddit_id, title, author, full_selftext, created_utc) VALUES (%s, %s, %s, %s, %s)'
+						q_args = [submission.id, submission.title, submission.author.name, submission.selftext, submission.created_utc]
+						execute_sql(query, q_args)
+				maintain_guide_index(reddit)
 
 	except prawcore.exceptions.ServerError as error:
 		print(f'skipping submission reply due to PRAW error: {type(error)}: {error}')
@@ -615,7 +615,7 @@ def ranked_flair_index(mp_lock, reddit):
 	# connect to the database
 	connect.db_connect('ranked flair index')
 
-	subreddit = reddit.subreddit('CompetitiveTFT')
+	subreddit = reddit.subreddit(config.HOME_SUBREDDIT)
 
 	try:
 		# iterate through all subreddit flairs
