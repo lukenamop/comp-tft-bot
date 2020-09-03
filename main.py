@@ -620,9 +620,8 @@ def ranked_flair_index(mp_lock, reddit):
 	try:
 		# iterate through all subreddit flairs
 		for flair in subreddit.flair(limit=None):
-			print(flair)
-			print(dict([attr, getattr(flair, attr)] for attr in dir(flair) if not attr.startswith('_')))
-			break
+			if flair['flair_text'] == ':rioter_flair: Riot':
+				print(flair)
 
 	except prawcore.exceptions.Forbidden as error:
 		print(f'stopping ranked flair index due to PRAW error: {type(error)}: {error}')
