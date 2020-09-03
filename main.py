@@ -618,9 +618,11 @@ def ranked_flair_index(mp_lock, reddit):
 	subreddit = reddit.subreddit('CompetitiveTFT')
 
 	try:
+		# iterate through all subreddit flairs
 		for flair in subreddit.flair(limit=None):
 			print(vars(flair))
 			break
+
 	except prawcore.exceptions.Forbidden as error:
 		print(f'stopping ranked flair index due to PRAW error: {type(error)}: {error}')
 
