@@ -474,7 +474,6 @@ def submission_reply_stream(mp_lock, reddit, iteration=1):
 
 			# only comment on submissions with specific flair
 			if hasattr(submission, 'link_flair_text'):
-				print(submission.link_flair_text)
 				if submission.link_flair_text == 'GUIDE':
 					respond_to_submission = True
 
@@ -507,6 +506,7 @@ def submission_reply_stream(mp_lock, reddit, iteration=1):
 						query = 'INSERT INTO guide_submissions (reddit_id, title, author, full_selftext, created_utc) VALUES (%s, %s, %s, %s, %s)'
 						q_args = [submission.id, submission.title, submission.author.name, submission.selftext, submission.created_utc]
 						execute_sql(query, q_args)
+					print('added new guide submission to the index')
 				maintain_guide_index(reddit)
 
 	except prawcore.exceptions.ServerError as error:
