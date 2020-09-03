@@ -609,6 +609,10 @@ def comment_reply_stream(mp_lock, reddit, iteration=1):
 	else:
 		print(f'killing comment reply stream, >{config.OVERFLOW} skipped comments')
 
+def ranked_flair_index_process(mp_lock, reddit):
+	for flair in reddit.subreddit('CompetitiveTFT').flair(limit=None):
+		print(vars(flair))
+		break
 
 ##### CODE TO RUN AT LAUNCH #####
 
@@ -637,6 +641,10 @@ def main():
 	# start the ranked flair updater
 	ranked_flair_updater_process = Process(target=ranked_flair_updater, args=(mp_lock, reddit, request_headers,))
 	ranked_flair_updater_process.start()
+
+	# start the ranked flair index
+	ranked_flair_index_process = Process(target=ranked_flair_index, args=(mp_lock, reddit,))
+	ranked_flair_index_process.start()
 
 	# start the function to maintain guide index
 	maintain_guide_index(reddit)
