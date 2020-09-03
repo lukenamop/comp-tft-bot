@@ -609,7 +609,7 @@ def comment_reply_stream(mp_lock, reddit, iteration=1):
 	else:
 		print(f'killing comment reply stream, >{config.OVERFLOW} skipped comments')
 
-def ranked_flair_index_process(mp_lock, reddit):
+def ranked_flair_index(mp_lock, reddit):
 	for flair in reddit.subreddit('CompetitiveTFT').flair(limit=None):
 		print(vars(flair))
 		break
