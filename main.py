@@ -610,9 +610,19 @@ def comment_reply_stream(mp_lock, reddit, iteration=1):
 		print(f'killing comment reply stream, >{config.OVERFLOW} skipped comments')
 
 def ranked_flair_index(mp_lock, reddit):
-	for flair in reddit.subreddit('CompetitiveTFT').flair(limit=None):
-		print(vars(flair))
-		break
+	print('ranked flair index started')
+
+	# connect to the database
+	connect.db_connect('ranked flair index')
+
+	subreddit = reddit.subreddit('CompetitiveTFT')
+
+	try:
+		for flair in subreddit.flair(limit=None):
+			print(vars(flair))
+			break
+	except prawcore.exceptions.Forbidden as error:
+		print(f'stopping ranked flair index due to PRAW error: {type(error)}: {error}')
 
 ##### CODE TO RUN AT LAUNCH #####
 
