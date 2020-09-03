@@ -620,7 +620,7 @@ def ranked_flair_index(mp_lock, reddit):
 	try:
 		# iterate through all subreddit flairs
 		for flair in subreddit.flair(limit=None):
-			print(dict([attr, getattr(obj, attr)] for attr in dir(obj) if not attr.startswith('_')))
+			print(dict([attr, getattr(flair, attr)] for attr in dir(flair) if not attr.startswith('_')))
 			break
 
 	except prawcore.exceptions.Forbidden as error:
