@@ -626,9 +626,9 @@ def main():
 	# create a multiprocessing lock
 	mp_lock = Lock()
 
-	# start the inbox reply stream
-	inbox_reply_stream_process = Process(target=inbox_reply_stream, args=(mp_lock, reddit, request_headers,))
-	inbox_reply_stream_process.start()
+	# # start the inbox reply stream
+	# inbox_reply_stream_process = Process(target=inbox_reply_stream, args=(mp_lock, reddit, request_headers,))
+	# inbox_reply_stream_process.start()
 
 	# # start the comment reply stream
 	# comment_reply_stream_process = Process(target=comment_reply_stream, args=(mp_lock, reddit,))
@@ -638,9 +638,9 @@ def main():
 	# submission_reply_stream_process = Process(target=submission_reply_stream, args=(mp_lock, reddit,))
 	# submission_reply_stream_process.start()
 
-	# start the ranked flair updater
-	ranked_flair_updater_process = Process(target=ranked_flair_updater, args=(mp_lock, reddit, request_headers,))
-	ranked_flair_updater_process.start()
+	# # start the ranked flair updater
+	# ranked_flair_updater_process = Process(target=ranked_flair_updater, args=(mp_lock, reddit, request_headers,))
+	# ranked_flair_updater_process.start()
 
 	# start the ranked flair index
 	ranked_flair_index_process = Process(target=ranked_flair_index, args=(mp_lock, reddit,))
