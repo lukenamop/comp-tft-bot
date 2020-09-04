@@ -658,9 +658,9 @@ def main():
 	# ranked_flair_updater_process = Process(target=ranked_flair_updater, args=(mp_lock, reddit, request_headers,))
 	# ranked_flair_updater_process.start()
 
-	# start the ranked flair index
-	ranked_flair_index_process = Process(target=ranked_flair_index, args=(mp_lock, reddit,))
-	ranked_flair_index_process.start()
+	# # start the ranked flair index
+	# ranked_flair_index_process = Process(target=ranked_flair_index, args=(mp_lock, reddit,))
+	# ranked_flair_index_process.start()
 
 	# start the function to maintain guide index
 	maintain_guide_index(reddit)
