@@ -621,9 +621,10 @@ def ranked_flair_index(mp_lock, reddit):
 		# iterate through all subreddit flairs
 		rioters = []
 		for flair in subreddit.flair(limit=None):
-			if 'challenger' in flair['flair_text'].lower():
-				print(flair)
-				rioters.append(flair['user'].name)
+			if flair['flair_text'] is not None:
+				if 'challenger' in flair['flair_text'].lower():
+					print(flair)
+					rioters.append(flair['user'].name)
 		print('done iterating challenger flair!')
 		print(rioters)
 
