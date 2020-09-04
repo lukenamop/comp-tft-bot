@@ -621,10 +621,10 @@ def ranked_flair_index(mp_lock, reddit):
 		# iterate through all subreddit flairs
 		rioters = []
 		for flair in subreddit.flair(limit=None):
-			if flair['flair_css_class'] == 'Grandmaster':
+			if flair['flair_css_class'] == 'Master':
 				print(flair)
 				rioters.append(flair['user'].name)
-		print('done iterating challenger flair!')
+		print('done iterating master flair!')
 		print(rioters)
 
 	except prawcore.exceptions.Forbidden as error:
