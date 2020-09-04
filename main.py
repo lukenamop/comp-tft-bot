@@ -621,7 +621,7 @@ def ranked_flair_index(mp_lock, reddit):
 		# iterate through all subreddit flairs
 		rioters = []
 		for flair in subreddit.flair(limit=None):
-			if flair['flair_css_class'] == 'Challenger':
+			if flair['flair_css_class'] == 'Grandmaster':
 				print(flair)
 				rioters.append(flair['user'].name)
 		print('done iterating challenger flair!')
