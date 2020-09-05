@@ -619,13 +619,12 @@ def ranked_flair_index(mp_lock, reddit):
 
 	try:
 		# iterate through all subreddit flairs
-		rioters = []
+		total_flair_count = 0
 		for flair in subreddit.flair(limit=None):
 			if flair['flair_css_class'] == 'Master':
 				print(flair)
-				rioters.append(flair['user'].name)
-		print('done iterating master flair!')
-		print(rioters)
+				break
+		print(f'found {total_flair_count} total assigned flairs')
 
 	except prawcore.exceptions.Forbidden as error:
 		print(f'stopping ranked flair index due to PRAW error: {type(error)}: {error}')
@@ -658,9 +657,9 @@ def main():
 	ranked_flair_updater_process = Process(target=ranked_flair_updater, args=(mp_lock, reddit, request_headers,))
 	ranked_flair_updater_process.start()
 
-	# # start the ranked flair index
-	# ranked_flair_index_process = Process(target=ranked_flair_index, args=(mp_lock, reddit,))
-	# ranked_flair_index_process.start()
+	# start the ranked flair index
+	ranked_flair_index_process = Process(target=ranked_flair_index, args=(mp_lock, reddit,))
+	ranked_flair_index_process.start()
 
 	# # start the function to maintain guide index
 	# maintain_guide_index(reddit)
