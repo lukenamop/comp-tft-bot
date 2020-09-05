@@ -16,7 +16,7 @@ R_PASSWORD = os.environ['R_PASSWORD']
 R_USERNAME = os.environ['R_USERNAME']
 R_USER_AGENT = 'heroku:comp-tft-bot (by /u/lukenamop)'
 # subreddit the bot will act on
-HOME_SUBREDDIT = 'CompetitiveTFT'
+HOME_SUBREDDIT = 'CompetitiveTFTTestSub'
 # reddit command prefix
 R_CMD_PREFIX = '!'
 # flair_mod_stream error overflow limit
