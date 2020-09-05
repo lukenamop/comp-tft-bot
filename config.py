@@ -27,7 +27,7 @@ RIOT_API_TOKEN = os.environ['RIOT_API_TOKEN']
 # custom flair character limit
 CUSTOM_FLAIR_CHAR_LIM = 30
 # auto-updater sleep time between flair updates (seconds)
-AUTO_UPDATE_SLEEP_TIME = 10
+AUTO_UPDATE_SLEEP_TIME = 30
 # auto-updater flair decay lockout start (epoch timestamp)
 AUTO_UPDATE_LOCKOUT_START = 1600153200
 # auto-updater flair decay lockout duration (days)
