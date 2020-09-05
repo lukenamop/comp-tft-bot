@@ -622,6 +622,7 @@ def ranked_flair_index(mp_lock, reddit):
 		total_flair_count = 0
 		for flair in subreddit.flair(limit=None):
 			if flair['flair_css_class'] == 'Master':
+				print(flair)
 				total_flair_count += 1
 				break
 		print(f'found {total_flair_count} total assigned flairs')
