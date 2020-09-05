@@ -621,10 +621,8 @@ def ranked_flair_index(mp_lock, reddit):
 		# iterate through all subreddit flairs
 		total_flair_count = 0
 		for flair in subreddit.flair(limit=None):
-			if flair['flair_css_class'] == 'Master':
-				print(flair)
+			if flair['flair_text'] != '':
 				total_flair_count += 1
-				break
 		print(f'found {total_flair_count} total assigned flairs')
 
 	except prawcore.exceptions.Forbidden as error:
