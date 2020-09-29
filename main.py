@@ -283,7 +283,8 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 				new_riot_verified_rank = f'{new_riot_verified_rank_tier} {new_riot_verified_rank_division}'
 			except KeyError:
 				try:
-					print(f"""auto-updater {ranked_json['status']['status_code']} error fetching ranked info: u/{reddit_username} -- {riot_summoner_name} -- {riot_region}: {ranked_json['status']['message']}""")
+					if not str(ranked_json['status']['status_code']) == 400:
+						print(f"""auto-updater {ranked_json['status']['status_code']} error fetching ranked info: u/{reddit_username} -- {riot_summoner_name} -- {riot_region}: {ranked_json['status']['message']}""")
 					fail_message = ''
 				except KeyError:
 					print(f'auto-updater unknown error fetching summoner: u/{reddit_username} -- {riot_summoner_name} -- {riot_region}')
