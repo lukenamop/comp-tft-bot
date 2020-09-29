@@ -57,15 +57,15 @@ RANKED_DIV_DICT = {
 # dict of all ranked flair template IDs
 RANKED_TIER_FLAIR_DICT = {
 	'Unranked': None,
-	'Iron': '02ffc88c-de8d-11ea-b61c-0e68680acae9',
-	'Bronze': '0c755e18-de8d-11ea-bbc0-0ec8330c3f45',
-	'Silver': '0e2281fa-de8d-11ea-b1b5-0e924619d27b',
-	'Gold': '10e74358-de8d-11ea-958d-0e6b190ecc7b',
-	'Platinum': '13fd6a4a-de8d-11ea-928c-0e8484cf5443',
-	'Diamond': '16723b66-de8d-11ea-9ce7-0e3953cf8987',
-	'Master': '48b9e132-de8d-11ea-a71f-0e762dd480fb',
-	'Grandmaster': '4c638c7a-de8d-11ea-b264-0ef6b978cbfb',
-	'Challenger': '4f4a4d5c-de8d-11ea-b610-0efb666e413f'
+	'Iron': '80c0cc06-74ef-11ea-9d33-0eba2ee63b05',
+	'Bronze': '897d9e82-74ef-11ea-9046-0e1e5f6d96db',
+	'Silver': '9032ee12-74ef-11ea-88ec-0e377b41a0af',
+	'Gold': '92d2d04c-74ef-11ea-874f-0ecf395933d7',
+	'Platinum': '968bb0be-74ef-11ea-8d72-0e7b9a34f76f',
+	'Diamond': '99461b00-74ef-11ea-8c0b-0e77129c2301',
+	'Master': 'f9c10fec-dea5-11ea-b61c-0e68680acae9',
+	'Grandmaster': '15e31148-dea6-11ea-9f4b-0e1ba84af911',
+	'Challenger': '23277cc2-dea6-11ea-8216-0ef1c84efa99'
 }
 # dict of all regions
 REGION_DICT = {
