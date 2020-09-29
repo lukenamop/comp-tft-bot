@@ -75,10 +75,13 @@ REGION_DICT = {
 	'jp': 'jp1',
 	'kr': 'kr',
 	'la': 'la',
+	'la1': 'la',
+	'la2': 'la',
 	'las': 'la',
 	'lan': 'la',
 	'na': 'na1',
 	'oc': 'oc1',
+	'oce': 'oc1',
 	'ru': 'ru',
 	'tr': 'tr1'
 }
