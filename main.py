@@ -61,11 +61,11 @@ def inbox_reply_stream(mp_lock, reddit, request_headers, iteration=1):
 					# check to see if the message template was followed
 					fail_message = None
 					try:
-						riot_summoner_name = unidecode(message.body.split('%')[1].split('%')[0]).strip()
+						riot_summoner_name = unidecode(message.body.split('--')[1].split('--')[0]).strip()
 						if len(riot_summoner_name) > 30:
 							fail_message = message.reply(f"""There was an error fetching your summoner profile.\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
-						riot_region = unidecode(message.body.split('%')[3].split('%')[0]).lower().strip()
-						custom_flair = unidecode(message.body.split('%')[5].split('%')[0]).strip()
+						riot_region = unidecode(message.body.split('--')[3].split('--')[0]).lower().strip()
+						custom_flair = unidecode(message.body.split('--')[5].split('--')[0]).strip()
 						if len(custom_flair) > config.CUSTOM_FLAIR_CHAR_LIM:
 							fail_message = message.reply(f"""Your custom flair `{custom_flair}` was too long, it cannot be longer than 30 characters.\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
 					except IndexError:
