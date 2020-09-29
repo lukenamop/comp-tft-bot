@@ -19,18 +19,62 @@ def db_connect(connection_name):
 
 def db_stats():
 	db_crsr.execute("""SELECT COUNT(*) FROM flaired_redditors WHERE riot_verified = False""")
-	unverified_redditors = db_crsr.fetchone()[0]
+	unverified_redditors = int(db_crsr.fetchone()[0])
 
 	db_crsr.execute("""SELECT COUNT(*) FROM flaired_redditors WHERE riot_verified = True""")
-	verified_redditors = db_crsr.fetchone()[0]
+	verified_redditors = int(db_crsr.fetchone()[0])
+
+	db_crsr.execute("""SELECT COUNT(*) FROM flaired_redditors WHERE riot_verified = True AND riot_region = 'br1'""")
+	br1_redditors = int(db_crsr.fetchone()[0])
+
+	db_crsr.execute("""SELECT COUNT(*) FROM flaired_redditors WHERE riot_verified = True AND riot_region = 'eun1'""")
+	eun1_redditors = int(db_crsr.fetchone()[0])
+
+	db_crsr.execute("""SELECT COUNT(*) FROM flaired_redditors WHERE riot_verified = True AND riot_region = 'euw1'""")
+	euw1_redditors = int(db_crsr.fetchone()[0])
+
+	db_crsr.execute("""SELECT COUNT(*) FROM flaired_redditors WHERE riot_verified = True AND riot_region = 'jp1'""")
+	jp1_redditors = int(db_crsr.fetchone()[0])
+
+	db_crsr.execute("""SELECT COUNT(*) FROM flaired_redditors WHERE riot_verified = True AND riot_region = 'kr'""")
+	kr_redditors = int(db_crsr.fetchone()[0])
+
+	db_crsr.execute("""SELECT COUNT(*) FROM flaired_redditors WHERE riot_verified = True AND riot_region = 'la1'""")
+	la1_redditors = int(db_crsr.fetchone()[0])
+
+	db_crsr.execute("""SELECT COUNT(*) FROM flaired_redditors WHERE riot_verified = True AND riot_region = 'la2'""")
+	la2_redditors = int(db_crsr.fetchone()[0])
+
+	db_crsr.execute("""SELECT COUNT(*) FROM flaired_redditors WHERE riot_verified = True AND riot_region = 'na1'""")
+	na1_redditors = int(db_crsr.fetchone()[0])
+
+	db_crsr.execute("""SELECT COUNT(*) FROM flaired_redditors WHERE riot_verified = True AND riot_region = 'oc1'""")
+	oc1_redditors = int(db_crsr.fetchone()[0])
+
+	db_crsr.execute("""SELECT COUNT(*) FROM flaired_redditors WHERE riot_verified = True AND riot_region = 'ru'""")
+	ru_redditors = int(db_crsr.fetchone()[0])
+
+	db_crsr.execute("""SELECT COUNT(*) FROM flaired_redditors WHERE riot_verified = True AND riot_region = 'tr1'""")
+	tr1_redditors = int(db_crsr.fetchone()[0])
 
 	db_crsr.execute("""SELECT COUNT(*) FROM guide_submissions""")
-	guide_submissions = db_crsr.fetchone()[0]
+	guide_submissions = int(db_crsr.fetchone()[0])
 
 	# print connection properties
 	print(f'postgres connection info: {db_conn.get_dsn_parameters()}'
 		+ f'\nunverified redditors: {unverified_redditors}'
 		+ f'\nverified redditors: {verified_redditors}'
+		+ f'\nbr1: {br1_redditors}'
+		+ f'\neun1: {eun1_redditors}'
+		+ f'\neuw1: {euw1_redditors}'
+		+ f'\njp1: {jp1_redditors}'
+		+ f'\nkr: {kr_redditors}'
+		+ f'\nla1: {la1_redditors}'
+		+ f'\nla2: {la2_redditors}'
+		+ f'\nna1: {na1_redditors}'
+		+ f'\noc1: {oc1_redditors}'
+		+ f'\nru: {ru_redditors}'
+		+ f'\ntr1: {tr1_redditors}'
 		+ f'\nguide submissions: {guide_submissions}')
 
 # TABLE flaired_redditors
