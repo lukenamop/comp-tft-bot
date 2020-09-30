@@ -71,6 +71,7 @@ RANKED_TIER_FLAIR_DICT = {
 REGION_DICT = {
 	'br': 'br1',
 	'eun': 'eun1',
+	'eune': 'eun1',
 	'euw': 'euw1',
 	'jp': 'jp1',
 	'kr': 'kr',
