@@ -598,13 +598,18 @@ def ranked_flair_index(mp_lock, reddit):
 	try:
 		# iterate through all subreddit flairs
 		total_flair_count = 0
-		total_ranked_flair_count = 0
+		flairs_to_delete = []
 		for flair in subreddit.flair(limit=None):
 			if flair['flair_css_class'] in ['Iron', 'Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Master', 'Grandmaster', 'Challenger']:
-				total_ranked_flair_count += 1
+				flairs_to_delete.append(flair['user'])
 			if flair['flair_text'] != '':
 				total_flair_count += 1
-		print(f'found {total_flair_count} total assigned flairs, {total_ranked_flair_count} of which are ranked flairs')
+
+		# FUTURE: use this loop to delete all ranked flairs
+		for redditor in flairs_to_delete:
+			if redditor.name == 'lukenamop':
+				subreddit.flair.delete(redditor)
+		print(f'found {total_flair_count} total assigned flairs, {len(flairs_to_delete)} of which are ranked flairs')
 
 	except prawcore.exceptions.Forbidden as error:
 		print(f'stopping ranked flair index due to PRAW error: {type(error)}: {error}')
