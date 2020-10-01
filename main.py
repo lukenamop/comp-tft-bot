@@ -311,6 +311,7 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 					for flair in current_sub_flair:
 						current_redditor_flair = flair['flair_text']
 
+					# FUTURE: disable this if statement to force-assign all flairs (make sure flair decay lockout is disabled)
 					# if it has changed, update the redditor's flair in the subreddit
 					if current_redditor_flair != f':{new_riot_verified_rank_tier.lower()[:4]}: {new_riot_verified_rank}{flair_suffix}':
 						subreddit.flair.set(reddit_username, text=f':{new_riot_verified_rank_tier.lower()[:4]}: {new_riot_verified_rank}{flair_suffix}', flair_template_id=flair_template_id)
@@ -597,12 +598,13 @@ def ranked_flair_index(mp_lock, reddit):
 	try:
 		# iterate through all subreddit flairs
 		total_flair_count = 0
+		total_ranked_flair_count = 0
 		for flair in subreddit.flair(limit=None):
-			if total_flair_count < 20:
-				print(flair)
+			if flair['flair_css_class'] in ['Iron', 'Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Master', 'Grandmaster', 'Challenger']:
+				total_ranked_flair_count += 1
 			if flair['flair_text'] != '':
 				total_flair_count += 1
-		print(f'found {total_flair_count} total assigned flairs')
+		print(f'found {total_flair_count} total assigned flairs, {total_ranked_flair_count} of which are ranked flairs')
 
 	except prawcore.exceptions.Forbidden as error:
 		print(f'stopping ranked flair index due to PRAW error: {type(error)}: {error}')
