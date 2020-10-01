@@ -258,9 +258,7 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 				new_riot_verified_rank = f'{new_riot_verified_rank_tier} {new_riot_verified_rank_division}'
 			except KeyError:
 				try:
-					# TODO: remove
-					if not int(ranked_json['status']['status_code']) == 400:
-						print(f"""auto-updater {ranked_json['status']['status_code']} error fetching ranked info: u/{reddit_username} -- {riot_summoner_name} -- {riot_region}: {ranked_json['status']['message']}""")
+					print(f"""auto-updater {ranked_json['status']['status_code']} error fetching ranked info: u/{reddit_username} -- {riot_summoner_name} -- {riot_region}: {ranked_json['status']['message']}""")
 					fail_message = ''
 				except KeyError:
 					print(f'auto-updater unknown error fetching summoner: u/{reddit_username} -- {riot_summoner_name} -- {riot_region}')
@@ -436,6 +434,7 @@ def maintain_guide_index(reddit):
 	print('done vectorizing')
 	return
 
+# loop still running, COMMENTS DISABLED
 def submission_reply_stream(mp_lock, reddit, iteration=1):
 	print('submission reply stream started')
 
@@ -501,6 +500,7 @@ def submission_reply_stream(mp_lock, reddit, iteration=1):
 	else:
 		print(f'killing submission reply stream, >{config.OVERFLOW} skipped comments')
 
+# DISABLED
 def comment_reply_stream(mp_lock, reddit, iteration=1):
 	print('comment reply stream started')
 
@@ -598,6 +598,8 @@ def ranked_flair_index(mp_lock, reddit):
 		# iterate through all subreddit flairs
 		total_flair_count = 0
 		for flair in subreddit.flair(limit=None):
+			if total_flair_count < 20:
+				print(flair)
 			if flair['flair_text'] != '':
 				total_flair_count += 1
 		print(f'found {total_flair_count} total assigned flairs')
