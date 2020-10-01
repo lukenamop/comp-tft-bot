@@ -606,9 +606,8 @@ def ranked_flair_index(mp_lock, reddit):
 				total_flair_count += 1
 
 		# FUTURE: use this loop to delete all ranked flairs
-		for redditor in flairs_to_delete:
-			if redditor.name == 'lukenamop':
-				subreddit.flair.delete(redditor)
+		# for redditor in flairs_to_delete:
+		# 	subreddit.flair.delete(redditor)
 		print(f'found {total_flair_count} total assigned flairs, {len(flairs_to_delete)} of which are ranked flairs')
 
 	except prawcore.exceptions.Forbidden as error:
