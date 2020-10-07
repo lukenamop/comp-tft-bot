@@ -615,7 +615,7 @@ def ranked_flair_index(mp_lock, reddit):
 				subreddit.flair.delete(redditor)
 				deleted_flairs += 1
 		print(f'found {total_flair_count} total assigned flairs, {len(flairs_to_delete)} of which are ranked flairs')
-		print(f'deleted {deleted_flairs} flairs')
+		# print(f'deleted {deleted_flairs} flairs')
 
 	except prawcore.exceptions.Forbidden as error:
 		print(f'stopping ranked flair index due to PRAW error: {type(error)}: {error}')
