@@ -606,9 +606,16 @@ def ranked_flair_index(mp_lock, reddit):
 				total_flair_count += 1
 
 		# FUTURE: use this loop to delete all ranked flairs
-		# for redditor in flairs_to_delete:
-		# 	subreddit.flair.delete(redditor)
+		deleted_flairs = 0
+		for redditor in flairs_to_delete:
+			query = 'SELECT db_id FROM flaired_redditors WHERE reddit_username = %s AND riot_verified = True'
+			q_args = [str(redditor)]
+			execute_sql(query, q_args)
+			if connect.db_crsr.fetchone() is None:
+				subreddit.flair.delete(redditor)
+				deleted_flairs += 1
 		print(f'found {total_flair_count} total assigned flairs, {len(flairs_to_delete)} of which are ranked flairs')
+		print(f'deleted {deleted_flairs} flairs')
 
 	except prawcore.exceptions.Forbidden as error:
 		print(f'stopping ranked flair index due to PRAW error: {type(error)}: {error}')
