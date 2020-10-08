@@ -124,7 +124,7 @@ def inbox_reply_stream(mp_lock, reddit, request_headers, iteration=1):
 							connect.db_conn.commit()
 						# if the redditor exists, update them in the database
 						else:
-							query = 'UPDATE flaired_redditors SET riot_region = %s, riot_summoner_name = %s, riot_summoner_id = %s, riot_verification_key = %s, custom_flair = %s WHERE reddit_username = %s'
+							query = 'UPDATE flaired_redditors SET riot_verified = False, riot_region = %s, riot_summoner_name = %s, riot_summoner_id = %s, riot_verification_key = %s, custom_flair = %s WHERE reddit_username = %s'
 							q_args = [riot_region, riot_summoner_name, riot_summoner_id, riot_verification_key, custom_flair, message.author.name]
 							execute_sql(query, q_args)
 							connect.db_conn.commit()
@@ -157,7 +157,8 @@ def inbox_reply_stream(mp_lock, reddit, request_headers, iteration=1):
 
 						# check the summoner's third party code against their verification key in the database
 						if third_party_code != riot_verification_key:
-							fail_message = message.reply(f"""Your verification key was incorrect.\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
+							fail_message = message.reply(f"""The verification key you provided was incorrect. You provided: {third_party_code}\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
+							print(f'verification key incorrect from u/{message.author.name} - {riot_verification_key} vs {third_party_code}')
 
 					if fail_message is None:
 						# request the summoner's ranked info from riot
