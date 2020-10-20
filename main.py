@@ -240,14 +240,14 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 		decay_lockout = True
 		print('auto-updater flair decay lockout is active')
 
-	try:
-		# fetch all flaired redditors from the database
-		query = 'SELECT reddit_username, riot_region, riot_summoner_name, riot_summoner_id, riot_verified_rank, custom_flair FROM flaired_redditors WHERE riot_verified = True ORDER BY reddit_username ASC'
-		execute_sql(query)
-		results = connect.db_crsr.fetchall()
-		redditors_to_update = len(results)
-		# iterate through all flaired redditors
-		for redditor in results:
+	# fetch all flaired redditors from the database
+	query = 'SELECT reddit_username, riot_region, riot_summoner_name, riot_summoner_id, riot_verified_rank, custom_flair FROM flaired_redditors WHERE riot_verified = True ORDER BY reddit_username ASC'
+	execute_sql(query)
+	results = connect.db_crsr.fetchall()
+	redditors_to_update = len(results)
+	# iterate through all flaired redditors
+	for redditor in results:
+		try:
 			redditors_to_update -= 1
 			fail_message = None
 			reddit_username, riot_region, riot_summoner_name, riot_summoner_id, riot_verified_rank, custom_flair = redditor
@@ -307,7 +307,10 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 						flair_suffix = f' | {custom_flair}'
 
 					# find the redditor's existing flair
-					current_sub_flair = reddit.subreddit(config.HOME_SUBREDDIT).flair(redditor=reddit_username, limit=1)
+					try:
+						current_sub_flair = reddit.subreddit(config.HOME_SUBREDDIT).flair(redditor=reddit_username, limit=1)
+					except prawcore.exceptions.Forbidden:
+						print(f'error finding u/{reddit_username}\'s existing flair')
 					current_redditor_flair = None
 					for flair in current_sub_flair:
 						current_redditor_flair = flair['flair_text']
@@ -315,8 +318,11 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 					# FUTURE: disable this if statement to force-assign all flairs (make sure flair decay lockout is disabled)
 					# if it has changed, update the redditor's flair in the subreddit
 					if current_redditor_flair != f':{new_riot_verified_rank_tier.lower()[:4]}: {new_riot_verified_rank}{flair_suffix}':
-						subreddit.flair.set(reddit_username, text=f':{new_riot_verified_rank_tier.lower()[:4]}: {new_riot_verified_rank}{flair_suffix}', flair_template_id=flair_template_id)
-						print(f'auto-updater triggered for u/{reddit_username}: {new_riot_verified_rank}{flair_suffix}')
+						try:
+							subreddit.flair.set(reddit_username, text=f':{new_riot_verified_rank_tier.lower()[:4]}: {new_riot_verified_rank}{flair_suffix}', flair_template_id=flair_template_id)
+							print(f'auto-updater triggered for u/{reddit_username}: {new_riot_verified_rank}{flair_suffix}')
+						except prawcore.exceptions.Forbidden:
+							print(f'error triggering auto-updater for u/{reddit_username}: {new_riot_verified_rank}{flair_suffix} - skipped')
 					else:
 						# print(f'auto-updater skipped u/{reddit_username}, no change in flair')
 						pass
@@ -330,14 +336,14 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 			# sleep for a few seconds before updating the next redditor
 			time.sleep(config.AUTO_UPDATE_SLEEP_TIME)
 
-	except prawcore.exceptions.ServerError as error:
-		print(f'skipping auto-update due to PRAW error: {type(error)}: {error}')
-	except prawcore.exceptions.RequestException as error:
-		print(f'skipping auto-update due to PRAW error: {type(error)}: {error}')
-	except prawcore.exceptions.ResponseException as error:
-		print(f'skipping auto-update due to PRAW error: {type(error)}: {error}')
-	except Exception as error:
-		print(f'skipping auto-update due to unknown error: {type(error)}: {error}')
+		except prawcore.exceptions.ServerError as error:
+			print(f'skipping auto-update due to PRAW error: {type(error)}: {error}')
+		except prawcore.exceptions.RequestException as error:
+			print(f'skipping auto-update due to PRAW error: {type(error)}: {error}')
+		except prawcore.exceptions.ResponseException as error:
+			print(f'skipping auto-update due to PRAW error: {type(error)}: {error}')
+		except Exception as error:
+			print(f'skipping auto-update due to unknown error: {type(error)}: {error}')
 
 	# if the loop completes instead of erroring out, don't add an iteration towards the overflow limit
 	if redditors_to_update > 0:
