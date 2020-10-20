@@ -20,7 +20,7 @@ HOME_SUBREDDIT = 'CompetitiveTFT'
 # reddit command prefix
 R_CMD_PREFIX = '!'
 # flair_mod_stream error overflow limit
-OVERFLOW = 5
+OVERFLOW = 50
 
 # riot API token
 RIOT_API_TOKEN = os.environ['RIOT_API_TOKEN']
