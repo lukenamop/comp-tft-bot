@@ -90,3 +90,5 @@ FINISH_VERIF_MSG_LINK = 'https://www.reddit.com/message/compose/?to=CompetitiveT
 
 # pushshift guide search config
 GUIDE_LIMIT = 10
+
+##### discord.py stuff
