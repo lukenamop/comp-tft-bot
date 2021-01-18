@@ -29,7 +29,7 @@ CUSTOM_FLAIR_CHAR_LIM = 30
 # auto-updater sleep time between flair updates (seconds)
 AUTO_UPDATE_SLEEP_TIME = 10
 # auto-updater flair decay lockout start (epoch timestamp)
-AUTO_UPDATE_LOCKOUT_START = 1600153200
+AUTO_UPDATE_LOCKOUT_START = 1610953500
 # auto-updater flair decay lockout duration (days)
 AUTO_UPDATE_LOCKOUT_DAYS = 30
 # auto-updater flair decay lockout start and end datetime objects
