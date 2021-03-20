@@ -269,8 +269,8 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 				fail_message = ''
 				# if not locked out of decay, update the redditor in the database
 				if not decay_lockout:
-					query = 'UPDATE flaired_redditors SET riot_verified_rank = %s, custom_flair = %s WHERE reddit_username = %s'
-					q_args = ['Unranked', custom_flair, reddit_username]
+					query = 'UPDATE flaired_redditors SET riot_verified_rank = %s WHERE reddit_username = %s'
+					q_args = ['Unranked', reddit_username]
 					execute_sql(query, q_args)
 					connect.db_conn.commit()
 
@@ -328,8 +328,8 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 						pass
 
 					# update the redditor in the database
-					query = 'UPDATE flaired_redditors SET riot_verified_rank = %s, custom_flair = %s WHERE reddit_username = %s'
-					q_args = [riot_verified_rank, custom_flair, reddit_username]
+					query = 'UPDATE flaired_redditors SET riot_verified_rank = %s WHERE reddit_username = %s'
+					q_args = [riot_verified_rank, reddit_username]
 					execute_sql(query, q_args)
 					connect.db_conn.commit()
 
