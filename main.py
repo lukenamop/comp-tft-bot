@@ -161,12 +161,15 @@ def inbox_reply_stream(mp_lock, reddit, request_headers, iteration=1):
 							print(f'verification key incorrect from u/{message.author.name} - {riot_verification_key} vs {third_party_code}')
 
 					if fail_message is None:
+						riot_verified_rank = ''
 						# request the summoner's ranked info from riot
 						ranked_json = requests.get(f"""https://{riot_region}.api.riotgames.com/tft/league/v1/entries/by-summoner/{riot_summoner_id}""", headers=request_headers).json()
 						try:
-							riot_verified_rank_tier = ranked_json[0]['tier'].capitalize()
-							riot_verified_rank_division = ranked_json[0]['rank']
-							riot_verified_rank = f'{riot_verified_rank_tier} {riot_verified_rank_division}'
+							for ranked_json_entry in ranked_json:
+								if ranked_json_entry['queueType'] == 'RANKED_TFT':
+									riot_verified_rank_tier = ranked_json[0]['tier'].capitalize()
+									riot_verified_rank_division = ranked_json[0]['rank']
+									riot_verified_rank = f'{riot_verified_rank_tier} {riot_verified_rank_division}'
 						except KeyError:
 							try:
 								fail_message = message.reply(f"""There was an error fetching your ranked info: `{ranked_json['status']['message']}`\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
@@ -184,6 +187,17 @@ def inbox_reply_stream(mp_lock, reddit, request_headers, iteration=1):
 							q_args = ['Unranked', custom_flair, message.author.name]
 							execute_sql(query, q_args)
 							connect.db_conn.commit()
+
+					if riot_verified_rank == '':
+						# send the redditor a message
+						fail_message = message.reply(f"""Your verified summoner account `{riot_summoner_name}` is currently `Unranked`. Your flair on r/{config.HOME_SUBREDDIT} has not been updated, please get ranked to update your flair!\n\nIf you'd like to try again, [please click here]({config.START_VERIF_MSG_LINK}).""")
+						print(f'ranked flair not updated for u/{message.author.name}')
+
+						# update the redditor in the database
+						query = 'UPDATE flaired_redditors SET riot_verified = True, riot_verified_rank = %s, custom_flair = %s WHERE reddit_username = %s'
+						q_args = ['Unranked', custom_flair, message.author.name]
+						execute_sql(query, q_args)
+						connect.db_conn.commit()
 
 					if fail_message is None:
 						# find the flair template ID for the summoner's ranked tier
@@ -251,12 +265,15 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 			redditors_to_update -= 1
 			fail_message = None
 			reddit_username, riot_region, riot_summoner_name, riot_summoner_id, riot_verified_rank, custom_flair = redditor
+			new_riot_verified_rank = ''
 			# request the summoner's ranked info from riot
 			ranked_json = requests.get(f"""https://{riot_region}.api.riotgames.com/tft/league/v1/entries/by-summoner/{riot_summoner_id}""", headers=request_headers).json()
 			try:
-				new_riot_verified_rank_tier = ranked_json[0]['tier'].capitalize()
-				new_riot_verified_rank_division = ranked_json[0]['rank']
-				new_riot_verified_rank = f'{new_riot_verified_rank_tier} {new_riot_verified_rank_division}'
+				for ranked_json_entry in ranked_json:
+					if ranked_json_entry['queueType'] == 'RANKED_TFT':
+						new_riot_verified_rank_tier = ranked_json[0]['tier'].capitalize()
+						new_riot_verified_rank_division = ranked_json[0]['rank']
+						new_riot_verified_rank = f'{new_riot_verified_rank_tier} {new_riot_verified_rank_division}'
 			except KeyError:
 				try:
 					print(f"""auto-updater {ranked_json['status']['status_code']} error fetching ranked info: u/{reddit_username} -- {riot_summoner_name} -- {riot_region}: {ranked_json['status']['message']}""")
@@ -266,6 +283,15 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 					fail_message = ''
 			except IndexError:
 				# print(f'auto-updater skipped u/{reddit_username}, Unranked')
+				fail_message = ''
+				# if not locked out of decay, update the redditor in the database
+				if not decay_lockout:
+					query = 'UPDATE flaired_redditors SET riot_verified_rank = %s WHERE reddit_username = %s'
+					q_args = ['Unranked', reddit_username]
+					execute_sql(query, q_args)
+					connect.db_conn.commit()
+
+			if new_riot_verified_rank == '':
 				fail_message = ''
 				# if not locked out of decay, update the redditor in the database
 				if not decay_lockout:
