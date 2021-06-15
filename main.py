@@ -167,8 +167,8 @@ def inbox_reply_stream(mp_lock, reddit, request_headers, iteration=1):
 						try:
 							for ranked_json_entry in ranked_json:
 								if ranked_json_entry['queueType'] == 'RANKED_TFT':
-									riot_verified_rank_tier = ranked_json[0]['tier'].capitalize()
-									riot_verified_rank_division = ranked_json[0]['rank']
+									riot_verified_rank_tier = ranked_json['tier'].capitalize()
+									riot_verified_rank_division = ranked_json['rank']
 									riot_verified_rank = f'{riot_verified_rank_tier} {riot_verified_rank_division}'
 						except KeyError:
 							try:
@@ -271,8 +271,8 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 			try:
 				for ranked_json_entry in ranked_json:
 					if ranked_json_entry['queueType'] == 'RANKED_TFT':
-						new_riot_verified_rank_tier = ranked_json[0]['tier'].capitalize()
-						new_riot_verified_rank_division = ranked_json[0]['rank']
+						new_riot_verified_rank_tier = ranked_json['tier'].capitalize()
+						new_riot_verified_rank_division = ranked_json['rank']
 						new_riot_verified_rank = f'{new_riot_verified_rank_tier} {new_riot_verified_rank_division}'
 			except KeyError:
 				try:
