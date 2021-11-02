@@ -370,6 +370,7 @@ def ranked_flair_updater(mp_lock, reddit, request_headers, iteration=1):
 			print(f'skipping auto-update due to PRAW error: {type(error)}: {error}')
 		except Exception as error:
 			print(f'skipping auto-update due to unknown error: {type(error)}: {error}')
+			print(ranked_json_entry)
 
 	# if the loop completes instead of erroring out, don't add an iteration towards the overflow limit
 	if redditors_to_update > 0:
